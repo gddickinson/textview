@@ -1,7 +1,7 @@
 # TextView
 
 [![tests](https://github.com/gddickinson/textview/actions/workflows/tests.yml/badge.svg)](https://github.com/gddickinson/textview/actions/workflows/tests.yml)
-![last commit](https://img.shields.io/badge/last%20commit-ffe53d9%20%C2%B7%202026--05--05-blue)
+![last commit](https://img.shields.io/badge/last%20commit-ce61898%20%C2%B7%202026--05--05-blue)
 ![python](https://img.shields.io/badge/python-3.12-blue)
 ![PyQt](https://img.shields.io/badge/PyQt-6-41cd52)
 ![license](https://img.shields.io/badge/license-private-lightgrey)
