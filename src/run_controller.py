@@ -37,6 +37,9 @@ class RunController(QObject):
             getattr(d, "runner_max_memory_mb", 1024),
         )
         self.panel.runner.set_python_interpreter(getattr(d, "python_interpreter", "python3"))
+        # Sandbox wrap (off by default — runner already has rlimits).
+        self.panel.runner._sandbox_no_network = bool(
+            getattr(d, "security_sandbox_runner", False))
 
     def toggle_action(self):
         a = self.panel.toggleViewAction()

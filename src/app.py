@@ -194,6 +194,14 @@ class MainWindow(QMainWindow):
         # unsaved changes. Callers that already prompted (Open dialog, tab
         # switch, disk-reload prompt) pass confirm=False to avoid double-asking.
         if confirm and not self.edit.confirm_discard(): return
+        # Security scan + open-time confirmation. Returns 'open' if the
+        # file is clean / the user accepted, 'quarantine' if the file was
+        # moved (we then bail), or 'cancel'.
+        try:
+            from .security_dialog import evaluate_open
+            decision = evaluate_open(self, path)
+        except Exception: decision = "open"
+        if decision != "open": return
         try:
             content, encoding, fmt = load_file(path)
         except FileNotFoundError:

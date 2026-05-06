@@ -210,6 +210,14 @@ def maybe_unknown_file_report(path) -> tuple[str, str] | None:
         e = None
     if e is not None:
         md += "\n\n---\n\n## From the file-format database\n\n" + e.to_markdown()
+    # Append a security-scan summary so the unknown-file report doubles
+    # as the user's first signal that something looks off.
+    try:
+        from .security_scanner import scan_file
+        sr = scan_file(p)
+        if sr.findings:
+            md += "\n\n---\n\n" + sr.to_markdown()
+    except Exception: pass
     return md, info.detected_kind
 
 

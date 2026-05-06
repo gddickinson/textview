@@ -125,11 +125,12 @@ def build(w):
     m_help = mb.addMenu("&Help")
     _add(m_help, w.action_docs_index, None,
          w.action_docs_overview, w.action_docs_workspace,
-         w.action_docs_unknown,
+         w.action_docs_unknown, w.action_docs_security,
          w.action_docs_formats, w.action_docs_shortcuts,
          w.action_docs_notebook, w.action_docs_lsp, w.action_docs_chat,
          w.action_docs_scripts, w.action_docs_plugins, w.action_docs_hooks, None,
          w.action_docs_agent_api, w.action_docs_control, w.action_docs_arch,
          w.action_docs_trouble, None,
-         w.action_format_db, None,
+         w.action_format_db,
+         w.action_security_report, w.action_quarantine_browser, None,
          w.action_cheat_sheet)

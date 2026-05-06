@@ -20,6 +20,9 @@ regression suite.
 - **[file-formats-db.md](file-formats-db.md)** — the bundled file-format
   reference (Help → File formats database… or Ctrl+Shift+D); how to
   add entries; agent-tool integration.
+- **[security.md](security.md)** — file-loading security: what's
+  detected, the open-time confirmation flow, quarantine, optional
+  ClamAV + sandbox-exec / firejail integration.
 - **[shortcuts.md](shortcuts.md)** — keyboard shortcuts grouped by
   context.
 - **[notebook.md](notebook.md)** — embedded Jupyter notebook viewer +

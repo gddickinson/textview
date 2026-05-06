@@ -160,6 +160,13 @@ class Runner(QObject):
             self.error.emit("Empty command.")
             return False
 
+        # Optional sandbox wrap (sandbox-exec on macOS, firejail on Linux).
+        # `_sandbox_no_network` is set by RunController based on the
+        # `security_sandbox_runner` setting.
+        if getattr(self, "_sandbox_no_network", False):
+            from .sandbox import wrap_argv
+            argv = wrap_argv(list(argv), no_network=True)
+
         proc = QProcess(self)
         proc.setProgram(argv[0])
         proc.setArguments(argv[1:])

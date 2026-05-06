@@ -90,9 +90,16 @@ def build(w):
     w.action_docs_overview = mk("Overview",               _opendoc("overview"))
     w.action_docs_workspace = mk("Workspace RAG",          _opendoc("workspace-rag"))
     w.action_docs_unknown  = mk("Unknown files",          _opendoc("unknown-files"))
+    w.action_docs_security = mk("Security & sandboxing",  _opendoc("security"))
     from .format_db_dialog import show_format_db
     w.action_format_db = mk("File formats database…",
                             lambda: show_format_db(w), "Ctrl+Shift+D")
+    from .security_dialog import show_security_report, show_quarantine_browser
+    w.action_security_report = mk("Security report…",
+                                   lambda: show_security_report(w),
+                                   "Ctrl+Shift+S")
+    w.action_quarantine_browser = mk("Quarantined files…",
+                                      lambda: show_quarantine_browser(w))
     w.action_docs_formats  = mk("File formats",           _opendoc("file-formats"))
     w.action_docs_shortcuts = mk("Keyboard reference",    _opendoc("shortcuts"))
     w.action_docs_notebook = mk("Notebook guide",         _opendoc("notebook"))

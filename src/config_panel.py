@@ -40,7 +40,8 @@ class ConfigPanel(QDockWidget):
                                self._table_group(), self._table_colors_group()]),
                     "Files")
         tabs.addTab(self._tab([self._browser_group()]), "Browser")
-        tabs.addTab(self._tab([self._privacy_group()]), "Privacy & Security")
+        tabs.addTab(self._tab([self._privacy_group(), self._file_security_group()]),
+                    "Privacy & Security")
         outer = QWidget()
         v = QVBoxLayout(outer)
         v.setContentsMargins(0, 0, 0, 0)
@@ -405,6 +406,56 @@ class ConfigPanel(QDockWidget):
         f.addRow(hint)
         return g
 
+    def _file_security_group(self):
+        g = QGroupBox("File-loading security")
+        f = QFormLayout(g)
+        self.cb_sec_scan = QCheckBox(
+            "Scan files for risky content before opening")
+        self.cb_sec_scan.setToolTip(
+            "Heuristic scan: dangerous extensions, magic-byte mismatches, "
+            "Office macros, PDF JavaScript, suspicious shell patterns. Files "
+            "with findings prompt before opening.")
+        self.cb_sec_scan.toggled.connect(
+            lambda v: self._set("security_scan_on_open", v))
+        f.addRow(self.cb_sec_scan)
+        self.cb_sec_macros = QCheckBox("Warn on Office documents with macros")
+        self.cb_sec_macros.toggled.connect(
+            lambda v: self._set("security_warn_macros", v))
+        f.addRow(self.cb_sec_macros)
+        self.cb_sec_pdfjs = QCheckBox("Warn on PDFs with embedded JavaScript / Launch")
+        self.cb_sec_pdfjs.toggled.connect(
+            lambda v: self._set("security_warn_pdf_js", v))
+        f.addRow(self.cb_sec_pdfjs)
+        self.cb_sec_exe = QCheckBox(
+            "Block executable extensions (.exe / .bat / .ps1 / …)")
+        self.cb_sec_exe.toggled.connect(
+            lambda v: self._set("security_block_executables", v))
+        f.addRow(self.cb_sec_exe)
+        self.cb_sec_clam = QCheckBox(
+            "Run ClamAV (`clamscan`) on each file (slow)")
+        self.cb_sec_clam.setToolTip(
+            "Requires ClamAV installed on the system. Adds ~0.5–5 s per "
+            "file open while scanning.")
+        self.cb_sec_clam.toggled.connect(
+            lambda v: self._set("security_clamscan_on_open", v))
+        f.addRow(self.cb_sec_clam)
+        self.cb_sec_sandbox = QCheckBox(
+            "Sandbox the runner (sandbox-exec / firejail; no network)")
+        self.cb_sec_sandbox.setToolTip(
+            "When enabled, F5 / shell runs are wrapped in sandbox-exec "
+            "(macOS) or firejail (Linux). Falls back to plain run when "
+            "neither is on PATH.")
+        self.cb_sec_sandbox.toggled.connect(
+            lambda v: self._set("security_sandbox_runner", v))
+        f.addRow(self.cb_sec_sandbox)
+        hint = QLabel(
+            "<i>Quarantined files live under "
+            "<code>~/.config/TextView/quarantine/</code>. Browse them via "
+            "<b>Help → Quarantined files…</b>.</i>")
+        hint.setWordWrap(True)
+        f.addRow(hint)
+        return g
+
     def _reset_row(self):
         w = QWidget()
         h = QHBoxLayout(w)
@@ -474,6 +525,12 @@ class ConfigPanel(QDockWidget):
         self.cb_cookies.setChecked(d.web_persistent_cookies)
         self.cb_3p_cookies.setChecked(d.web_block_third_party_cookies)
         self.cb_run_confirm.setChecked(d.runner_confirm_first_run)
+        self.cb_sec_scan.setChecked(d.security_scan_on_open)
+        self.cb_sec_macros.setChecked(d.security_warn_macros)
+        self.cb_sec_pdfjs.setChecked(d.security_warn_pdf_js)
+        self.cb_sec_exe.setChecked(d.security_block_executables)
+        self.cb_sec_clam.setChecked(d.security_clamscan_on_open)
+        self.cb_sec_sandbox.setChecked(d.security_sandbox_runner)
         self._suppress = False
 
     def _set(self, key, value):

@@ -80,6 +80,18 @@ class DisplaySettings:
     # (plugins). All default OFF — the user has to opt in deliberately.
     agent_can_install: bool = False
     agent_can_create_plugins: bool = False
+    agent_can_purge_quarantine: bool = False
+
+    # File-loading security. Heuristic scan runs before every file open;
+    # findings of severity dangerous/suspicious prompt the user before
+    # the file is loaded. ClamAV + sandbox are slower / heavier and stay
+    # off by default.
+    security_scan_on_open: bool = True
+    security_warn_macros: bool = True
+    security_warn_pdf_js: bool = True
+    security_block_executables: bool = True
+    security_clamscan_on_open: bool = False
+    security_sandbox_runner: bool = False
 
     # Per-format typography (prose formats use a different font when on).
     use_prose_typography: bool = False

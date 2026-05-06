@@ -45,6 +45,13 @@ plugins to teach the app new file formats.
   The unknown-file inspector auto-attaches the matching entry; the
   chat agent has lookup / search / extend tools.
   → [`docs/file-formats-db.md`](docs/file-formats-db.md)
+- **Security at open-time.** Heuristic scan of every file before it
+  loads — dangerous extensions, magic-byte mismatches, Office macros,
+  PDF JavaScript / Launch triggers, suspicious shell patterns
+  (`curl … | bash`, base64-decode-pipe-shell, PowerShell evasion).
+  Findings prompt with **Open / Quarantine / Cancel**. Optional
+  ClamAV passthrough; optional `sandbox-exec` / `firejail` for the
+  runner. → [`docs/security.md`](docs/security.md)
 - **LSP support** for Python (pyright), TypeScript, Go (gopls), Rust
   (rust-analyzer), C/C++ (clangd) — hover, go-to-definition, find
   references, diagnostics panel. → [`docs/lsp.md`](docs/lsp.md)
@@ -95,6 +102,7 @@ You can also drag-and-drop files onto the window to open them.
 | Workspace RAG (deep dive) | [`docs/workspace-rag.md`](docs/workspace-rag.md) |
 | Unknown-file workflow + safety gates | [`docs/unknown-files.md`](docs/unknown-files.md) |
 | File-formats database | [`docs/file-formats-db.md`](docs/file-formats-db.md) |
+| Security & sandboxing | [`docs/security.md`](docs/security.md) |
 | Chat / LLM panel | [`docs/chat.md`](docs/chat.md) |
 | LSP setup per language | [`docs/lsp.md`](docs/lsp.md) |
 | Notebook viewer / runner | [`docs/notebook.md`](docs/notebook.md) |
