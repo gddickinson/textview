@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    permissions:
+      contents: write
+
     env:
       QT_QPA_PLATFORM: offscreen
       QT_DEBUG_PLUGINS: "0"
@@ -43,3 +46,33 @@ jobs:
 
       - name: Run fast tests (skip subprocess-based suites)
         run: pytest -m "not slow" -ra
+
+      - name: Bump last-commit badge on README
+        if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          DATE=$(git log -1 --format=%cs)
+          export SHA DATE
+          python - <<'PY'
+          import os, re, pathlib
+          sha, date = os.environ['SHA'], os.environ['DATE']
+          # Dashes are escaped as `--` in the URL so shields.io renders one literal dash.
+          safe_date = date.replace('-', '--')
+          new = (f'![last commit](https://img.shields.io/badge/'
+                 f'last%20commit-{sha}%20%C2%B7%20{safe_date}-blue)')
+          p = pathlib.Path('README.md')
+          t = p.read_text()
+          t = re.sub(
+              r'!\[last commit\]\(https://img\.shields\.io/badge/last%20commit-[^)]*\)',
+              new, t, count=1)
+          p.write_text(t)
+          PY
+          if git diff --quiet README.md; then
+            echo "Badge already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "ci: bump last-commit badge to ${SHA} [skip ci]"
+          git push
