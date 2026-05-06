@@ -29,7 +29,48 @@ FORMAT_MAP = {
     ".java": "java", ".go": "go", ".rs": "rust", ".rb": "ruby",
     ".php": "php", ".sh": "bash", ".bash": "bash", ".zsh": "bash",
     ".css": "css", ".scss": "scss", ".sql": "sql",
-    ".swift": "swift", ".kt": "kotlin",
+    ".swift": "swift", ".kt": "kotlin", ".kts": "kotlin",
+    # R, Julia, Lua, Perl, Haskell, OCaml, Elixir, Erlang
+    ".r": "r", ".rmd": "markdown",   # Rmd → markdown render; chunks stay code
+    ".jl": "julia", ".lua": "lua",
+    ".pl": "perl", ".pm": "perl", ".t": "perl",
+    ".hs": "haskell", ".lhs": "haskell",
+    ".ml": "ocaml", ".mli": "ocaml",
+    ".ex": "elixir", ".exs": "elixir",
+    ".erl": "erlang", ".hrl": "erlang",
+    # JVM family
+    ".scala": "scala", ".sc": "scala",
+    ".groovy": "groovy", ".gradle": "groovy",
+    ".clj": "clojure", ".cljs": "clojure", ".cljc": "clojure", ".edn": "clojure",
+    # .NET family
+    ".cs": "csharp", ".csx": "csharp",
+    ".fs": "fsharp", ".fsx": "fsharp", ".fsi": "fsharp",
+    ".vb": "vbnet",
+    # Systems-y
+    ".nim": "nim", ".zig": "zig", ".d": "d", ".cr": "crystal",
+    ".vala": "vala",
+    ".dart": "dart", ".ps1": "powershell", ".psm1": "powershell", ".psd1": "powershell",
+    # Embedded / hardware adjacent
+    ".ino": "cpp",                              # Arduino is C++
+    ".pde": "java",                             # Processing is Java
+    ".sol": "solidity",
+    # Hardware description
+    ".v": "verilog", ".sv": "verilog", ".svh": "verilog",
+    ".vhd": "vhdl", ".vhdl": "vhdl",
+    # Shaders
+    ".glsl": "glsl", ".vert": "glsl", ".frag": "glsl",
+    ".tesc": "glsl", ".tese": "glsl", ".geom": "glsl", ".comp": "glsl",
+    ".hlsl": "hlsl", ".fx": "hlsl",
+    # Assembly
+    ".asm": "nasm", ".s": "gas", ".S": "gas",
+    # Fortran
+    ".f": "fortran", ".f77": "fortran", ".f90": "fortran",
+    ".f95": "fortran", ".f03": "fortran", ".f08": "fortran", ".for": "fortran",
+    # Build / config
+    ".cmake": "cmake",
+    ".dockerfile": "dockerfile",
+    ".mk": "make",
+    ".mak": "make",
     ".ipynb": "notebook",
     # Documents (extracted to text)
     ".pdf": "pdf", ".docx": "docx", ".rtf": "rtf",
@@ -52,8 +93,31 @@ VIDEO_FORMATS = {"video"}
 ENCODINGS_TO_TRY = ["utf-8", "utf-8-sig", "utf-16", "latin-1", "cp1252"]
 
 
+# Filenames recognised regardless of extension (build files etc.).
+FILENAME_MAP = {
+    "dockerfile": "dockerfile",
+    "containerfile": "dockerfile",
+    "makefile": "make",
+    "gnumakefile": "make",
+    "cmakelists.txt": "cmake",
+    "justfile": "make",          # Pygments has no justfile lexer; closest match
+    "rakefile": "ruby",
+    "gemfile": "ruby",
+    "podfile": "ruby",
+    "vagrantfile": "ruby",
+    "fastfile": "ruby",
+}
+
+
 def detect_format(path) -> str:
-    return FORMAT_MAP.get(Path(path).suffix.lower(), "plain")
+    p = Path(path)
+    by_name = FILENAME_MAP.get(p.name.lower())
+    if by_name: return by_name
+    # Use the original suffix (case-sensitive) for `.S` (gas) so it doesn't
+    # collide with `.s` — both still resolve via FORMAT_MAP, but cmake / make
+    # and other lowercase-only entries still work.
+    suffix = p.suffix
+    return FORMAT_MAP.get(suffix, FORMAT_MAP.get(suffix.lower(), "plain"))
 
 
 def is_document(path) -> bool:
@@ -74,7 +138,17 @@ def supported_extensions():
 
 def file_dialog_filter() -> str:
     """Return a filter string for QFileDialog covering everything we support."""
-    code_exts = ".py .js .ts .tsx .jsx .c .cpp .h .hpp .java .go .rs .rb .php .sh .bash .zsh .css .scss .sql .swift .kt"
+    code_exts = (
+        ".py .js .ts .tsx .jsx .c .cpp .h .hpp .java .go .rs .rb .php "
+        ".sh .bash .zsh .css .scss .sql .swift .kt .kts "
+        ".r .rmd .jl .lua .pl .pm .hs .ml .ex .exs .erl "
+        ".scala .groovy .gradle .clj .cljs .edn "
+        ".cs .csx .fs .fsx .vb "
+        ".nim .zig .d .cr .vala .dart .ps1 "
+        ".ino .pde .sol .v .sv .vhd .vhdl "
+        ".glsl .vert .frag .hlsl "
+        ".asm .s .S .f .f90 .f95"
+    )
     return ";;".join([
         "All supported (*.txt *.log *.md *.markdown *.rst *.html *.htm *.xml "
         "*.json *.yaml *.yml *.csv *.tsv *.toml *.ini *.cfg *.conf "

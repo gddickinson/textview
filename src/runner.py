@@ -88,6 +88,26 @@ DEFAULT_LANGUAGES: dict[str, list[str]] = {
     "clj":  ["clojure", "$FILE"],
     "exs":  ["elixir", "$FILE"],
     "rs":   ["sh", "-c", "rustc --edition=2021 \"$0\" -o /tmp/_tv_rs && /tmp/_tv_rs", "$FILE"],
+    # More single-file runners (each requires the named binary on PATH).
+    "jl":   ["julia", "$FILE"],
+    "hs":   ["runghc", "$FILE"],
+    "lhs":  ["runghc", "$FILE"],
+    "ml":   ["ocaml", "$FILE"],
+    "ex":   ["elixir", "$FILE"],
+    "erl":  ["escript", "$FILE"],
+    "csx":  ["dotnet", "script", "$FILE"],
+    "fsx":  ["dotnet", "fsi", "$FILE"],
+    "nim":  ["nim", "r", "$FILE"],
+    "zig":  ["zig", "run", "$FILE"],
+    "dart": ["dart", "run", "$FILE"],
+    "cr":   ["crystal", "run", "$FILE"],
+    "d":    ["rdmd", "$FILE"],
+    "vala": ["vala", "$FILE"],
+    "kts":  ["kotlin", "-script", "$FILE"],
+    # Compile-and-run wrappers (mirroring the rust pattern).
+    "c":    ["sh", "-c", "cc -o /tmp/_tv_c \"$0\" && /tmp/_tv_c", "$FILE"],
+    "cpp":  ["sh", "-c", "c++ -std=c++17 -o /tmp/_tv_cpp \"$0\" && /tmp/_tv_cpp", "$FILE"],
+    "f90":  ["sh", "-c", "gfortran -o /tmp/_tv_f \"$0\" && /tmp/_tv_f", "$FILE"],
 }
 
 

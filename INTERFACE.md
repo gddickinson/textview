@@ -137,7 +137,7 @@ with live-updating display configuration and many export formats.
 - Markdown: `.md`, `.markdown`, `.rst`
 - Markup: `.html`, `.htm`, `.xml`
 - Data: `.json`, `.yaml`, `.yml`, `.csv`, `.tsv`, `.psv`, `.tab`, `.toml`, `.ini`, `.cfg`, `.conf`
-- Code: `.py`, `.js`, `.ts`, `.tsx`, `.jsx`, `.c`, `.cpp`, `.h`, `.hpp`, `.java`, `.go`, `.rs`, `.rb`, `.php`, `.sh`, `.bash`, `.zsh`, `.css`, `.scss`, `.sql`, `.swift`, `.kt`
+- Code: `.py`, `.js`, `.ts`, `.tsx`, `.jsx`, `.c`, `.cpp`, `.h`, `.hpp`, `.java`, `.go`, `.rs`, `.rb`, `.php`, `.sh`, `.bash`, `.zsh`, `.css`, `.scss`, `.sql`, `.swift`, `.kt`, `.kts`, `.r`, `.rmd`, `.jl`, `.lua`, `.pl`, `.pm`, `.hs`, `.lhs`, `.ml`, `.mli`, `.ex`, `.exs`, `.erl`, `.scala`, `.sc`, `.groovy`, `.gradle`, `.clj`, `.cljs`, `.cljc`, `.edn`, `.cs`, `.csx`, `.fs`, `.fsx`, `.fsi`, `.vb`, `.nim`, `.zig`, `.d`, `.cr`, `.vala`, `.dart`, `.ps1`, `.psm1`, `.ino` (Arduino), `.pde` (Processing), `.sol`, `.v`/`.sv`/`.vhd`/`.vhdl`, `.glsl`/`.vert`/`.frag`/`.hlsl`, `.asm`/`.s`/`.S`, `.f90`/`.f95`/`.f03`, plus `Dockerfile` / `Makefile` / `CMakeLists.txt` / `Justfile` / `Rakefile` / `Gemfile` by name
 - Documents: `.pdf`, `.docx`, `.rtf`, `.epub`, `.odt`
 - Images: `.png`, `.jpg`/`.jpeg`, `.gif` (animated), `.bmp`, `.webp` (incl. multi-frame), `.tif`/`.tiff` (incl. multi-page), `.svg`/`.svgz`, `.ico`, `.heic`/`.heif`, `.jp2`, `.tga`
 - Video: `.mp4`, `.mov`, `.m4v`, `.mkv`, `.webm`, `.avi`, `.wmv`, `.flv`, `.mpeg`/`.mpg`, `.ogv`, `.3gp` (codec support depends on the host Qt/FFmpeg build)
