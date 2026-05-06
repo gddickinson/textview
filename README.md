@@ -11,8 +11,33 @@ video, and tabular files — with live display config, syntax highlighting,
 LSP integration, embedded Jupyter notebook + REPL, agent-driven scripting,
 and a 302-test regression suite.
 
+![code editor with chat panel](docs/screenshots/03_code_python.png)
+
 See [`INTERFACE.md`](INTERFACE.md) for the navigation map and
 [`ROADMAP.md`](ROADMAP.md) for shipped + parked features.
+
+## Showcase
+
+| | |
+| --- | --- |
+| ![welcome](docs/screenshots/01_welcome.png) **Welcome screen** — quick orientation when the app first opens. | ![CSV in table mode](docs/screenshots/05_csv_table.png) **CSV / TSV** — auto-delimiter, sortable columns, filter bar, selection stats. |
+| ![Jupyter notebook](docs/screenshots/08_notebook.png) **Notebooks** — `.ipynb` viewer, editor, and runner with a shared kernel. Cells render rich outputs (HTML / SVG / images / markdown). | ![PDF](docs/screenshots/06_pdf.png) **PDFs** — page-mode rendering via `QPdfView` with link follow-through, search, and copy-as-text. |
+| ![Image viewer](docs/screenshots/07_image.png) **Images** — pan / zoom, brightness / contrast / saturation / gamma sliders, eyedropper, crop. Multi-frame WebP / TIFF / GIF. | ![Markdown rendered](docs/screenshots/02_markdown_rendered.png) **Markdown** — rendered HTML view with syntax-highlighted code fences. |
+| ![JSON](docs/screenshots/04_json.png) **Structured data** — JSON / YAML / TOML / XML pretty-print + validate via the runner. | ![Dark theme](docs/screenshots/10_dark_theme.png) **Themes** — 10 built-in palettes; switch live without reopening. |
+
+### Unknown-file workflow
+
+When you open a file TextView doesn't natively understand, it identifies
+the file by magic bytes / extension / heuristics and shows a markdown
+report — then offers to hand off to the chat agent, which can search
+for documentation, write a handler script, or (with explicit per-tool
+opt-in) install a package and write a plugin to teach the app a new
+format.
+
+![unknown file inspector](docs/screenshots/09_unknown_file.png)
+
+See [`docs/unknown-files.md`](docs/unknown-files.md) for the full flow
+including the two-gate safety story.
 
 ## Install
 
