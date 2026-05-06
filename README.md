@@ -1,9 +1,14 @@
 # TextView
 
+![tests](https://img.shields.io/badge/tests-302%20passing-brightgreen)
+![python](https://img.shields.io/badge/python-3.12-blue)
+![PyQt](https://img.shields.io/badge/PyQt-6-41cd52)
+![license](https://img.shields.io/badge/license-private-lightgrey)
+
 A modular PyQt6 GUI for viewing text, code, markup, document, image,
 video, and tabular files — with live display config, syntax highlighting,
 LSP integration, embedded Jupyter notebook + REPL, agent-driven scripting,
-and a 170+ test regression suite.
+and a 302-test regression suite.
 
 See [`INTERFACE.md`](INTERFACE.md) for the navigation map and
 [`ROADMAP.md`](ROADMAP.md) for shipped + parked features.
@@ -34,7 +39,7 @@ python main.py
 ## Run the test suite
 
 ```bash
-python -m pytest                  # full (~6s, 170+ cases)
+python -m pytest                  # full (~9s, 302 cases)
 python -m pytest -m "not slow"    # fast subset (skips Jupyter subprocess tests)
 python -m pytest tests/test_X.py  # one file
 ```
