@@ -48,7 +48,7 @@ jobs:
         run: pytest -m "not slow" -ra
 
       - name: Bump last-commit badge on README
-        if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
+        if: ${{ github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]') }}
         run: |
           SHA=$(git rev-parse --short HEAD)
           DATE=$(git log -1 --format=%cs)
