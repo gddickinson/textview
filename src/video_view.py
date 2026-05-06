@@ -84,14 +84,14 @@ class VideoView(QWidget):
             h.addWidget(w)
         layout.addWidget(bar, 0)
 
-        # Player + audio.
-        self.player = QMediaPlayer(self)
-        self.audio = QAudioOutput(self)
-        self.player.setAudioOutput(self.audio)
-        self.player.setVideoOutput(self.surface)
-        self.audio.setVolume(0.8)
+        # Player + audio are built lazily on the first `load()`. macOS
+        # Core Audio device enumeration emits a flurry of "audio device
+        # has unrecognized channel" messages on QAudioOutput construction,
+        # so we defer that until the user actually opens a video.
+        self.player: QMediaPlayer | None = None
+        self.audio: QAudioOutput | None = None
 
-        # Wire signals.
+        # Transport-bar wiring (no player needed).
         self.btn_play.clicked.connect(self.toggle_play_pause)
         self.btn_stop.clicked.connect(self.stop)
         self.btn_mute.clicked.connect(self._toggle_mute)
@@ -101,6 +101,15 @@ class VideoView(QWidget):
         self.slider.sliderReleased.connect(self._slider_released)
         self.slider.sliderMoved.connect(self._slider_moved)
 
+    def _ensure_player(self):
+        """Construct the QMediaPlayer + QAudioOutput on demand and wire
+        their signals. Idempotent."""
+        if self.player is not None: return
+        self.player = QMediaPlayer(self)
+        self.audio = QAudioOutput(self)
+        self.player.setAudioOutput(self.audio)
+        self.player.setVideoOutput(self.surface)
+        self.audio.setVolume(self.s_vol.value() / 100.0)
         self.player.positionChanged.connect(self._on_position)
         self.player.durationChanged.connect(self._on_duration)
         self.player.playbackStateChanged.connect(self._on_state)
@@ -109,6 +118,7 @@ class VideoView(QWidget):
     # -- public API ----------------------------------------------------------
 
     def load(self, path: str) -> bool:
+        self._ensure_player()
         try:
             self.player.setSource(QUrl.fromLocalFile(str(path)))
             return True
@@ -117,28 +127,31 @@ class VideoView(QWidget):
             return False
 
     def play(self):
-        self.player.play()
+        if self.player is not None: self.player.play()
 
     def pause(self):
-        self.player.pause()
+        if self.player is not None: self.player.pause()
 
     def toggle_play_pause(self):
+        if self.player is None: return
         if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.player.pause()
         else:
             self.player.play()
 
     def stop(self):
-        self.player.stop()
+        if self.player is not None: self.player.stop()
 
     def set_position(self, ms: int):
-        self.player.setPosition(int(ms))
+        if self.player is not None: self.player.setPosition(int(ms))
 
     def is_playing(self) -> bool:
-        return self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+        return (self.player is not None and
+                self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState)
 
     def teardown(self):
         """Release the source so a tab close doesn't leak an active decoder."""
+        if self.player is None: return
         try:
             self.player.stop()
             self.player.setSource(QUrl())
@@ -152,12 +165,12 @@ class VideoView(QWidget):
 
     def _slider_released(self):
         self._dragging = False
-        self.player.setPosition(self.slider.value())
+        if self.player is not None: self.player.setPosition(self.slider.value())
 
     def _slider_moved(self, v: int):
         # Live scrub — also updates label so the user sees the destination.
         self.lbl_pos.setText(_fmt_ms(v))
-        self.player.setPosition(v)
+        if self.player is not None: self.player.setPosition(v)
 
     # -- player event handlers ----------------------------------------------
 
@@ -184,6 +197,7 @@ class VideoView(QWidget):
     # -- volume / mute -------------------------------------------------------
 
     def _on_volume(self, v: int):
+        if self.audio is None: return    # value is preserved via the slider
         self.audio.setVolume(v / 100.0)
         if v == 0:
             self.btn_mute.setText("🔇")
@@ -192,6 +206,7 @@ class VideoView(QWidget):
             self.btn_mute.setText("🔊")
 
     def _toggle_mute(self):
+        if self.audio is None: return
         muted = not self.audio.isMuted()
         self.audio.setMuted(muted)
         self.btn_mute.setText("🔇" if muted else "🔊")
