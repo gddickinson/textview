@@ -53,6 +53,7 @@ class ImageView(QScrollArea):
     pixmap_updated = pyqtSignal()   # fires after each adjustment / frame redraw
     color_picked = pyqtSignal(int, int, int, int, int)  # r, g, b, x, y (label coords)
     crop_selected = pyqtSignal(QRect)  # rubberband rect in label coords
+    autoscale_changed = pyqtSignal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -68,6 +69,7 @@ class ImageView(QScrollArea):
         self._fit = True
         self._rotation = 0
         self._adj = dict(_DEFAULTS)
+        self._autoscale = False
         self._checkered = False
         self._current_path: str | None = None
         self._pick_mode = False
@@ -93,6 +95,7 @@ class ImageView(QScrollArea):
         self._current_path = str(path)
         self._rotation = 0
         self._adj = dict(_DEFAULTS)
+        self._autoscale = False
         self._frame_idx = 0
         self._n_frames = 1
         ext = Path(path).suffix.lower()
@@ -116,6 +119,13 @@ class ImageView(QScrollArea):
             img.load()
             n = getattr(img, "n_frames", 1) or 1
             self._pil = img
+            # Wide-dynamic-range images (16-bit microscope TIFFs, float
+            # rasters, etc.) benefit from auto-contrast on every frame —
+            # without it the visible range often falls in 1-4 of 0-255
+            # and the image looks black. Default the toggle on for those;
+            # leave it off for ordinary 8-bit photos so they stay faithful.
+            self._autoscale = img.mode in {"I", "I;16", "I;16B", "I;16L",
+                                           "I;16N", "F"}
             self._n_frames = int(n)
             self._frame_idx = 0
             self._zoom = 1.0
@@ -194,6 +204,15 @@ class ImageView(QScrollArea):
         self._derive_pixmap()
         if self._fit:
             self.fit_to_window()
+
+    def set_autoscale(self, on: bool):
+        self._autoscale = bool(on)
+        self._derive_pixmap()
+        if self._fit: self.fit_to_window()
+        self.autoscale_changed.emit(self._autoscale)
+
+    def is_autoscale(self) -> bool:
+        return self._autoscale
 
     def adjustment(self, name: str) -> float:
         return self._adj.get(name, 1.0)
@@ -301,7 +320,8 @@ class ImageView(QScrollArea):
         already set at load time; rotation is applied here too.
         """
         if self._pil is not None:
-            adjusted = image_adjust.adjust(self._pil, **self._adj)
+            adjusted = image_adjust.adjust(
+                self._pil, autoscale=self._autoscale, **self._adj)
             self._adjusted_pil = adjusted   # cached for histogram, etc.
             qimg = image_adjust.pil_to_qimage(adjusted)
             pm = QPixmap.fromImage(qimg)

@@ -13,6 +13,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QFormLayout, QSlider, QLabel,
     QPushButton, QHBoxLayout, QSpinBox, QGroupBox, QFileDialog, QApplication,
+    QCheckBox,
 )
 
 
@@ -73,6 +74,13 @@ class ImagePanel(QDockWidget):
         adj_form.addRow("Saturation", self._wrap(self.s_saturation, self.l_saturation))
         adj_form.addRow("Gamma",      self._wrap(self.s_gamma,      self.l_gamma))
 
+        self.cb_autoscale = QCheckBox("Autoscale (stretch min/max → 0/255)")
+        self.cb_autoscale.setToolTip(
+            "Linearly stretch each frame's actual pixel range across the "
+            "full visible range. Default ON for 16-bit / float images "
+            "(microscope TIFFs, GIS rasters), OFF for 8-bit photos.")
+        adj_form.addRow(self.cb_autoscale)
+
         self.btn_reset = QPushButton("Reset adjustments")
         adj_form.addRow(self.btn_reset)
         outer.addWidget(adj_box)
@@ -82,6 +90,9 @@ class ImagePanel(QDockWidget):
         self.s_saturation.valueChanged.connect(self._on_saturation)
         self.s_gamma.valueChanged.connect(self._on_gamma)
         self.btn_reset.clicked.connect(self._on_reset)
+        self.cb_autoscale.toggled.connect(self._on_autoscale_toggled)
+        # Mirror state when ImageView's autoscale changes via load() default.
+        self.image_view.autoscale_changed.connect(self._sync_autoscale)
 
         # -- frame navigation group ----------------------------------------
         self.frame_box = QGroupBox("Frames")
@@ -202,6 +213,16 @@ class ImagePanel(QDockWidget):
         self._block(False)
         self.image_view.reset_adjustments()
 
+    def _on_autoscale_toggled(self, on: bool):
+        self.image_view.set_autoscale(on)
+
+    def _sync_autoscale(self, on: bool):
+        # ImageView decides its own default per file in `_load_with_pil`.
+        # Mirror that into the checkbox without re-firing the toggle.
+        self.cb_autoscale.blockSignals(True)
+        self.cb_autoscale.setChecked(on)
+        self.cb_autoscale.blockSignals(False)
+
     def _block(self, on: bool):
         for s in (self.s_brightness, self.s_contrast,
                   self.s_saturation, self.s_gamma):
@@ -218,6 +239,8 @@ class ImagePanel(QDockWidget):
         self._set_frame_nav(n_frames, 0)
         # Reset the slider UI (values are already reset on the view side).
         self._on_reset() if has_adj else self._reset_sliders_visual()
+        # Sync the autoscale checkbox to whatever load() decided per format.
+        self._sync_autoscale(self.image_view.is_autoscale())
 
     def _on_frame_changed(self, idx: int):
         n = self.image_view.frame_count()

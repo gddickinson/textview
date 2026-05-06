@@ -63,3 +63,81 @@ def test_16bit_tiff_round_trips_through_adjust(tmp_path):
     out = adjust(img, brightness=1.6)
     qimg = pil_to_qimage(out)
     assert not qimg.isNull()
+
+
+# ---- autoscale -----------------------------------------------------------
+
+def test_autoscale_stretches_low_dynamic_range_image():
+    """Image with values 100-110 should fill 0-255 after autoscale."""
+    import numpy as np
+    arr = np.linspace(100, 110, 8 * 8, dtype=np.uint8).reshape(8, 8)
+    img = Image.fromarray(arr, mode="L")
+    out = adjust(img, autoscale=True)
+    out_arr = np.asarray(out)
+    assert out_arr.min() == 0
+    assert out_arr.max() == 255
+
+
+def test_autoscale_off_preserves_pixel_values_for_8bit():
+    import numpy as np
+    arr = np.full((8, 8), 64, dtype=np.uint8)
+    img = Image.fromarray(arr, mode="L")
+    out = adjust(img, autoscale=False)
+    assert int(np.asarray(out).max()) == 64
+
+
+def test_autoscale_per_channel_for_rgb():
+    """Each color channel should be stretched independently."""
+    import numpy as np
+    arr = np.zeros((8, 8, 3), dtype=np.uint8)
+    arr[..., 0] = 50;  arr[..., 1] = 100;  arr[..., 2] = 150
+    img = Image.fromarray(arr, "RGB")
+    out = adjust(img, autoscale=True)
+    out_arr = np.asarray(out)
+    # Each channel was constant — stretch leaves a constant unchanged
+    # (mn == mx → skip), but at least the call doesn't crash.
+    assert out_arr.shape == arr.shape
+
+
+def test_low_signal_16bit_tiff_displays_via_autoscale(tmp_path):
+    """Reproduces the user's microscope TIFF case: pixel values 300-1200
+    out of 0-65535. Without autoscale, they map to near-zero and the
+    image looks black. With autoscale, they fill 0-255."""
+    import numpy as np
+    arr = np.random.RandomState(0).randint(300, 1200, (32, 32), dtype=np.uint16)
+    p = tmp_path / "microscope.tif"
+    Image.fromarray(arr, mode="I;16").save(p)
+    img = Image.open(p); img.load()
+    out = adjust(img, autoscale=True)
+    a = np.asarray(out)
+    # Stretched output should span (close to) the full 0-255 range.
+    assert a.max() >= 200
+    assert a.min() <= 50
+
+
+def test_image_view_defaults_autoscale_on_for_16bit(tmp_path):
+    """ImageView turns autoscale on for I;16 / F formats by default."""
+    pytest.importorskip("PyQt6")
+    from PyQt6.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])
+    from src.image_view import ImageView
+    p = tmp_path / "frame.tif"
+    Image.new("I;16", (16, 16), 1000).save(p)
+    iv = ImageView()
+    iv.load(str(p))
+    assert iv.is_autoscale() is True
+    # And turn it off → state propagates.
+    iv.set_autoscale(False)
+    assert iv.is_autoscale() is False
+
+
+def test_image_view_defaults_autoscale_off_for_8bit(tmp_path):
+    pytest.importorskip("PyQt6")
+    from PyQt6.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])
+    from src.image_view import ImageView
+    p = tmp_path / "photo.png"
+    Image.new("RGB", (16, 16), (50, 100, 200)).save(p)
+    iv = ImageView()
+    iv.load(str(p))
+    assert iv.is_autoscale() is False
