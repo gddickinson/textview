@@ -16,8 +16,9 @@ text_display/
 ├── SESSION_LOG.md          append-only history of changes
 ├── README.md               install + run + key shortcuts
 ├── docs/                   user + agent documentation (this folder)
-├── src/                    application code (50+ modules, all <500 lines)
-├── tests/                  pytest regression suite (170+ tests)
+├── data/                   bundled file-format database (JSON)
+├── src/                    application code (60+ modules, all <500 lines)
+├── tests/                  pytest regression suite (447 tests)
 ├── tools/                  helper scripts (control_client.py)
 ├── plugins/                example plugins
 └── sample_files/           tiny sample inputs for trying things out
@@ -87,9 +88,9 @@ QApplication
   one approaches the cap, we extract.
 - **`INTERFACE.md`**: read this file BEFORE opening any source — it's
   the navigation map.
-- **Tests**: persistent `tests/` directory, 170+ cases. Run
-  `python -m pytest`. Slow / subprocess tests are marked
-  `@pytest.mark.slow`.
+- **Tests**: persistent `tests/` directory, 447 cases. Run
+  `python -m pytest`. Slow / subprocess tests (9) are marked
+  `@pytest.mark.slow`; CI runs the fast subset (438) on every push.
 - **Append-only log**: `SESSION_LOG.md` records every significant
   change with rationale.
 - **Memory store** (Claude-style): `~/.config/TextView/memory/*.md`.

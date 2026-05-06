@@ -148,7 +148,7 @@ Browse via **Help → Quarantined files…**. Each row has:
 
 ## Manual security report
 
-Press **Ctrl+Shift+S** (or **Help → Security report…**) at any time
+Press **F8** (or **Help → Security report…**) at any time
 to re-scan the current file and see the findings dialog. Useful when
 you've changed the settings and want to re-evaluate, or when you
 want to see why a file came up clean.

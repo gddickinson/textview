@@ -41,7 +41,7 @@ plugins to teach the app new file formats.
   GIF), video, Jupyter notebooks. → [`docs/file-formats.md`](docs/file-formats.md)
 - **Built-in format reference.** A curated database of 40+ file
   formats — descriptions, magic bytes, tools, how-to-open / convert
-  notes — searchable from **Help → File formats database… (Ctrl+Shift+D)**.
+  notes — searchable from **Help → File formats database… (Ctrl+Shift+B)**.
   The unknown-file inspector auto-attaches the matching entry; the
   chat agent has lookup / search / extend tools.
   → [`docs/file-formats-db.md`](docs/file-formats-db.md)
@@ -62,7 +62,7 @@ plugins to teach the app new file formats.
   display option is reactive. 10 built-in palettes (Dracula, Nord,
   Solarized, Sepia, …) switch without restart.
 - **Modular by construction.** Every source file under 500 lines, one
-  concern each, 302-test regression suite running in CI in under
+  concern each, 447-test regression suite running in CI in under
   10 seconds. → [`INTERFACE.md`](INTERFACE.md), [`docs/architecture.md`](docs/architecture.md)
 
 ## Quick start
@@ -142,12 +142,12 @@ responsibility is one row in a table there.
 ## Tests + CI
 
 ```bash
-python -m pytest                  # full (~9s, 302 cases)
+python -m pytest                  # full (~10s, 447 cases)
 python -m pytest -m "not slow"    # CI subset (skips Jupyter subprocess tests)
 python -m pytest tests/test_X.py  # one file
 ```
 
-GitHub Actions runs the fast subset (293 / 302 cases) on every push
+GitHub Actions runs the fast subset (438 / 447 cases) on every push
 and pull request via [`tests.yml`](.github/workflows/tests.yml). The
 README's `last commit` badge is auto-bumped by the same workflow on
 every green push to `main`.

@@ -2,9 +2,11 @@
 
 A modular PyQt6 GUI for viewing, editing, and analyzing text, code,
 markup, document, image, video, table, and notebook files — with live
-display configuration, syntax highlighting, LSP integration, an embedded
-Jupyter notebook + REPL, agent-driven scripting, and a 170+ test
-regression suite.
+display configuration, syntax highlighting, LSP integration, an
+embedded Jupyter notebook + REPL, an AI agent with workspace RAG +
+multimodal chat, an extensible file-format database, layered
+file-loading security (scan / quarantine / sandbox), and a 447-test
+regression suite running in CI.
 
 ## For users
 
@@ -18,7 +20,7 @@ regression suite.
   a file TextView doesn't recognise; how the agent helps you handle it
   (and the safety gates around `pip install` / plugin creation).
 - **[file-formats-db.md](file-formats-db.md)** — the bundled file-format
-  reference (Help → File formats database… or Ctrl+Shift+D); how to
+  reference (Help → File formats database… or Ctrl+Shift+B); how to
   add entries; agent-tool integration.
 - **[security.md](security.md)** — file-loading security: what's
   detected, the open-time confirmation flow, quarantine, optional

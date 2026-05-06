@@ -93,11 +93,11 @@ def build(w):
     w.action_docs_security = mk("Security & sandboxing",  _opendoc("security"))
     from .format_db_dialog import show_format_db
     w.action_format_db = mk("File formats database…",
-                            lambda: show_format_db(w), "Ctrl+Shift+D")
+                            lambda: show_format_db(w), "Ctrl+Shift+B")
     from .security_dialog import show_security_report, show_quarantine_browser
     w.action_security_report = mk("Security report…",
                                    lambda: show_security_report(w),
-                                   "Ctrl+Shift+S")
+                                   "F8")
     w.action_quarantine_browser = mk("Quarantined files…",
                                       lambda: show_quarantine_browser(w))
     w.action_docs_formats  = mk("File formats",           _opendoc("file-formats"))

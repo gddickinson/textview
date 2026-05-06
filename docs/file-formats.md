@@ -35,11 +35,30 @@ the other; save writes the table model serialized through `csv.writer`.
 
 ## Code
 
-20+ source extensions: `.py`, `.js`, `.ts`, `.tsx`, `.jsx`, `.c`,
-`.cpp`, `.cc`, `.h`, `.hpp`, `.java`, `.go`, `.rs`, `.rb`, `.php`,
-`.sh`, `.bash`, `.zsh`, `.css`, `.scss`, `.sql`, `.swift`, `.kt`. All
-open in **code** mode with Pygments syntax highlighting matching the
-active theme.
+70+ source extensions across all major language families:
+
+- **Mainstream**: `.py`, `.js`, `.ts`, `.tsx`, `.jsx`, `.c`, `.cpp`,
+  `.cc`, `.h`, `.hpp`, `.java`, `.go`, `.rs`, `.rb`, `.php`, `.sh`,
+  `.bash`, `.zsh`, `.css`, `.scss`, `.sql`, `.swift`, `.kt`, `.kts`.
+- **Scientific / data**: `.r`, `.rmd`, `.jl`, `.lua`, `.pl`, `.pm`,
+  `.hs`, `.lhs`, `.ml`, `.mli`, `.f`, `.f90`, `.f95`, `.f03`, `.erl`.
+- **JVM**: `.scala`, `.sc`, `.groovy`, `.gradle`, `.clj`, `.cljs`,
+  `.cljc`, `.edn`.
+- **.NET**: `.cs`, `.csx`, `.fs`, `.fsx`, `.fsi`, `.vb`.
+- **Modern systems**: `.nim`, `.zig`, `.d`, `.cr`, `.vala`, `.dart`,
+  `.ps1`, `.psm1`, `.ex`, `.exs`.
+- **Hardware / embedded**: `.ino` (Arduino → C++), `.pde` (Processing
+  → Java), `.sol` (Solidity), `.v` / `.sv` / `.svh` (Verilog), `.vhd`
+  / `.vhdl` (VHDL).
+- **Shaders**: `.glsl`, `.vert`, `.frag`, `.tesc`, `.tese`, `.geom`,
+  `.comp`, `.hlsl`, `.fx`.
+- **Assembly**: `.asm` (NASM), `.s` / `.S` (GAS).
+- **Build / config (by filename)**: `Dockerfile`, `Makefile`,
+  `GNUmakefile`, `CMakeLists.txt`, `Justfile`, `Rakefile`, `Gemfile`,
+  `Podfile`, `Vagrantfile`, `Containerfile`.
+
+All open in **code** mode with Pygments syntax highlighting matching
+the active theme.
 
 LSP integration (when `lsp_enabled`): hover (Ctrl+Shift+H or auto),
 go-to-definition (F2), find references (Shift+F12), diagnostics in the

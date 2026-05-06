@@ -3,7 +3,7 @@
 TextView ships with a curated database of file formats — what each
 one is for, where it's used, what tools handle it, and how to open
 or convert it. Open it from **Help → File formats database…** or
-press **Ctrl+Shift+D**.
+press **Ctrl+Shift+B**.
 
 ## What's in it
 
