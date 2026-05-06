@@ -1,6 +1,6 @@
 # TextView
 
-![tests](https://img.shields.io/badge/tests-302%20passing-brightgreen)
+[![tests](https://github.com/gddickinson/textview/actions/workflows/tests.yml/badge.svg)](https://github.com/gddickinson/textview/actions/workflows/tests.yml)
 ![python](https://img.shields.io/badge/python-3.12-blue)
 ![PyQt](https://img.shields.io/badge/PyQt-6-41cd52)
 ![license](https://img.shields.io/badge/license-private-lightgrey)
