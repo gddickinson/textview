@@ -198,6 +198,18 @@ def maybe_unknown_file_report(path) -> tuple[str, str] | None:
               f"({h.description or 'no description'}). "
               f"Run it via Run → Run agent script (F7) and pick "
               f"`{h.script}`.\n\n") + md
+    # Attach an entry from the file-format database if one matches —
+    # gives the user a quick "what is this and how do I use it" without
+    # having to ask the agent.
+    try:
+        from .format_db import db
+        e = (db().lookup_by_extension(p.suffix)
+             or db().lookup_by_filename(p.name)
+             or db().lookup_by_id(info.detected_kind))
+    except Exception:
+        e = None
+    if e is not None:
+        md += "\n\n---\n\n## From the file-format database\n\n" + e.to_markdown()
     return md, info.detected_kind
 
 

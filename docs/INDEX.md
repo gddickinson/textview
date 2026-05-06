@@ -17,6 +17,9 @@ regression suite.
 - **[unknown-files.md](unknown-files.md)** — what happens when you open
   a file TextView doesn't recognise; how the agent helps you handle it
   (and the safety gates around `pip install` / plugin creation).
+- **[file-formats-db.md](file-formats-db.md)** — the bundled file-format
+  reference (Help → File formats database… or Ctrl+Shift+D); how to
+  add entries; agent-tool integration.
 - **[shortcuts.md](shortcuts.md)** — keyboard shortcuts grouped by
   context.
 - **[notebook.md](notebook.md)** — embedded Jupyter notebook viewer +

@@ -1,0 +1,558 @@
+{
+  "schema_version": 1,
+  "formats": [
+    {
+      "id": "txt",
+      "name": "Plain text",
+      "extensions": [".txt", ".text"],
+      "mime": ["text/plain"],
+      "category": "text",
+      "binary": false,
+      "description": "Unstructured text in some encoding (usually UTF-8 today, historically ASCII / Windows-1252 / Latin-1). The most universal interchange format on every operating system.",
+      "use_cases": ["Notes", "Logs", "Quick interchange", "READMEs"],
+      "tools": [
+        {"name": "Any text editor", "kind": "app"},
+        {"name": "less / more", "kind": "cli"}
+      ],
+      "open_with": "TextView opens directly with encoding auto-detection (utf-8 → utf-8-sig → utf-16 → latin-1 → cp1252).",
+      "tags": ["universal"]
+    },
+    {
+      "id": "markdown",
+      "name": "Markdown",
+      "extensions": [".md", ".markdown"],
+      "mime": ["text/markdown"],
+      "category": "text",
+      "binary": false,
+      "description": "A lightweight markup language designed by John Gruber in 2004 for formatting plain text documents. Renders to HTML; widely used for README files, documentation, blogs, and chat platforms.",
+      "use_cases": ["READMEs", "Documentation sites", "GitHub / GitLab issues + PRs", "Static blog posts", "Chat formatting (Slack, Discord)"],
+      "tools": [
+        {"name": "Pandoc", "kind": "cli", "url": "https://pandoc.org/"},
+        {"name": "MkDocs", "kind": "framework"},
+        {"name": "Hugo", "kind": "framework"}
+      ],
+      "open_with": "TextView renders Markdown to HTML via Python `markdown`. Toggle source / rendered view with Ctrl+T.",
+      "convert": "To HTML: `pandoc -f markdown -t html in.md`. To PDF: `pandoc in.md -o out.pdf` (needs LaTeX).",
+      "links": [
+        {"title": "CommonMark spec", "url": "https://spec.commonmark.org/"},
+        {"title": "GitHub-flavored Markdown", "url": "https://github.github.com/gfm/"}
+      ],
+      "tags": ["markup", "lightweight"]
+    },
+    {
+      "id": "json",
+      "name": "JSON (JavaScript Object Notation)",
+      "extensions": [".json"],
+      "mime": ["application/json"],
+      "category": "data",
+      "binary": false,
+      "description": "Lightweight data interchange format, a subset of JavaScript object literal syntax. Native to web APIs and most modern programming languages have built-in parsers.",
+      "use_cases": ["REST API responses", "Configuration files", "Data interchange", "NoSQL document stores"],
+      "tools": [
+        {"name": "jq", "kind": "cli", "url": "https://jqlang.github.io/jq/"},
+        {"name": "Python json module", "kind": "library"}
+      ],
+      "open_with": "TextView shows it with syntax highlighting; F5 runs `python -m json.tool` to validate + pretty-print.",
+      "convert": "To YAML: `yq -P file.json`. To CSV (flat): `jq -r '. | @csv'`.",
+      "links": [{"title": "JSON spec", "url": "https://www.json.org/"}],
+      "tags": ["interchange", "web-api"]
+    },
+    {
+      "id": "yaml",
+      "name": "YAML (YAML Ain't Markup Language)",
+      "extensions": [".yaml", ".yml"],
+      "mime": ["application/yaml", "text/yaml"],
+      "category": "data",
+      "binary": false,
+      "description": "Human-friendly data serialization standard. Superset of JSON; commonly used for configuration where readability matters more than parse speed.",
+      "use_cases": ["Kubernetes manifests", "GitHub Actions workflows", "Docker Compose files", "Ansible playbooks", "App configuration"],
+      "tools": [
+        {"name": "yq", "kind": "cli", "url": "https://github.com/mikefarah/yq"},
+        {"name": "PyYAML", "kind": "library"}
+      ],
+      "open_with": "Syntax highlighted on open; the renderer treats it as plain text with YAML-aware coloring.",
+      "links": [{"title": "YAML 1.2 spec", "url": "https://yaml.org/spec/1.2.2/"}],
+      "tags": ["config", "interchange"]
+    },
+    {
+      "id": "toml",
+      "name": "TOML (Tom's Obvious Minimal Language)",
+      "extensions": [".toml"],
+      "mime": ["application/toml"],
+      "category": "data",
+      "binary": false,
+      "description": "Minimal config language designed to map unambiguously to a hash table. Used by Python's `pyproject.toml`, Rust's `Cargo.toml`, and many newer tools.",
+      "use_cases": ["Python project metadata", "Rust crate manifests", "Application config"],
+      "open_with": "Highlighted on open; F5 validates via Python's `tomllib` and prints JSON.",
+      "links": [{"title": "TOML 1.0 spec", "url": "https://toml.io/en/v1.0.0"}],
+      "tags": ["config"]
+    },
+    {
+      "id": "csv",
+      "name": "CSV (Comma-Separated Values)",
+      "extensions": [".csv", ".tsv", ".tab", ".psv"],
+      "mime": ["text/csv"],
+      "category": "data",
+      "binary": false,
+      "description": "Tabular plain-text format with one row per line and fields separated by a delimiter (typically comma; tab = TSV; pipe = PSV). The lingua franca of spreadsheets and lightweight data interchange.",
+      "use_cases": ["Spreadsheet exports", "Bulk database imports", "Log dumps", "Pipeline interchange"],
+      "tools": [
+        {"name": "pandas", "kind": "library"},
+        {"name": "DuckDB", "kind": "cli"},
+        {"name": "csvkit", "kind": "cli"}
+      ],
+      "open_with": "TextView opens in Table mode with sortable headers, filter bar, live selection stats, and a chart picker. Toggle to source view with Ctrl+T.",
+      "convert": "To Parquet: `duckdb -c \"COPY (FROM 'in.csv') TO 'out.parquet'\"`. To JSON: `csvjson in.csv`.",
+      "links": [{"title": "RFC 4180", "url": "https://www.rfc-editor.org/rfc/rfc4180"}],
+      "tags": ["tabular", "interchange"]
+    },
+    {
+      "id": "html",
+      "name": "HTML (HyperText Markup Language)",
+      "extensions": [".html", ".htm", ".xhtml"],
+      "mime": ["text/html"],
+      "category": "markup",
+      "binary": false,
+      "description": "The markup language of the World Wide Web. Structures content with tags; styled with CSS and animated with JavaScript.",
+      "use_cases": ["Web pages", "Email templates", "Documentation"],
+      "open_with": "TextView shows source by default; Ctrl+T flips to a rendered preview using Qt WebEngine.",
+      "tags": ["web", "markup"]
+    },
+    {
+      "id": "python",
+      "name": "Python source",
+      "extensions": [".py", ".pyw", ".pyi"],
+      "mime": ["text/x-python"],
+      "category": "code",
+      "binary": false,
+      "description": "Source code for the Python programming language — interpreted, dynamically typed, with a rich standard library and ecosystem.",
+      "open_with": "Syntax highlighted by Pygments; F5 runs via the configured interpreter (`Run → Choose Python interpreter…` discovers system / conda / pyenv); Alt+/ inline-completes via the chat panel's LLM.",
+      "links": [{"title": "python.org", "url": "https://www.python.org/"}],
+      "tags": ["scripting"]
+    },
+    {
+      "id": "r",
+      "name": "R source",
+      "extensions": [".r", ".rmd"],
+      "mime": ["text/x-r"],
+      "category": "code",
+      "binary": false,
+      "description": "Source code for the R statistical programming language. Used for data analysis, statistics, and visualization. R Markdown (.Rmd) interleaves prose with R code chunks that knit to HTML / PDF / Word.",
+      "use_cases": ["Statistical analysis", "Reproducible research reports", "Tidyverse data pipelines", "ggplot2 visualizations"],
+      "tools": [
+        {"name": "Rscript", "kind": "cli"},
+        {"name": "RStudio", "kind": "app"},
+        {"name": "knitr / rmarkdown", "kind": "library"}
+      ],
+      "open_with": "TextView highlights R via Pygments' S+ lexer and runs `.r` via `Rscript $FILE` on F5. `.Rmd` opens as Markdown.",
+      "links": [{"title": "R Project", "url": "https://www.r-project.org/"}],
+      "tags": ["statistics", "data"]
+    },
+    {
+      "id": "ipynb",
+      "name": "Jupyter Notebook",
+      "extensions": [".ipynb"],
+      "mime": ["application/x-ipynb+json"],
+      "category": "code",
+      "binary": false,
+      "description": "A JSON document that interleaves code cells, markdown cells, and rendered outputs (text, HTML, SVG, PNG, MathJax). The standard for interactive Python (and other kernel) work.",
+      "use_cases": ["Interactive data analysis", "Teaching materials", "Reproducible research", "Quick experiments"],
+      "open_with": "TextView opens in the embedded notebook viewer/editor — edit cells, hit Run, the kernel auto-starts; outputs render in place and persist on save.",
+      "convert": "To HTML: `jupyter nbconvert --to html in.ipynb`. To Python: `jupyter nbconvert --to script`.",
+      "links": [{"title": "Jupyter docs", "url": "https://jupyter.org/"}],
+      "tags": ["notebook", "interactive"]
+    },
+    {
+      "id": "pdf",
+      "name": "PDF (Portable Document Format)",
+      "extensions": [".pdf"],
+      "mime": ["application/pdf"],
+      "category": "document",
+      "binary": true,
+      "magic_bytes": "%PDF-",
+      "description": "ISO 32000 fixed-layout document format. Embeds fonts, vector graphics, raster images, forms, annotations, and (optionally) JavaScript. Designed to look identical on every device.",
+      "use_cases": ["Final-form documents", "Forms", "Scientific papers", "Print-ready layouts"],
+      "tools": [
+        {"name": "pdftotext (poppler)", "kind": "cli"},
+        {"name": "pypdf", "kind": "library"},
+        {"name": "pdfplumber", "kind": "library"},
+        {"name": "Adobe Acrobat", "kind": "app"}
+      ],
+      "open_with": "TextView renders PDFs page-by-page via QPdfView with text search, link-click navigation, and copy-as-text. Toggle to extracted-text view.",
+      "convert": "To text: `pdftotext in.pdf out.txt`. To images: `pdftoppm -png in.pdf prefix`.",
+      "links": [{"title": "ISO 32000", "url": "https://www.iso.org/standard/75839.html"}],
+      "tags": ["document", "fixed-layout"]
+    },
+    {
+      "id": "docx",
+      "name": "Microsoft Word document (Office Open XML)",
+      "extensions": [".docx"],
+      "mime": ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+      "category": "document",
+      "binary": true,
+      "magic_bytes": "PK (zip container)",
+      "description": "Office Open XML word-processing document. A ZIP archive containing XML parts (document.xml, styles.xml, …) plus embedded media. Replaces the legacy `.doc` format.",
+      "tools": [
+        {"name": "python-docx", "kind": "library"},
+        {"name": "Mammoth", "kind": "library"},
+        {"name": "Pandoc", "kind": "cli"},
+        {"name": "Microsoft Word", "kind": "app"},
+        {"name": "LibreOffice Writer", "kind": "app"}
+      ],
+      "open_with": "TextView extracts the body via Mammoth, preserving headings, lists, tables, and inline images, then renders it as themed HTML. Source toggle shows the extracted plain text.",
+      "convert": "To Markdown: `pandoc in.docx -t gfm`. To PDF: `pandoc in.docx -o out.pdf` or LibreOffice `--convert-to pdf`.",
+      "tags": ["document", "office"]
+    },
+    {
+      "id": "epub",
+      "name": "EPUB (electronic publication)",
+      "extensions": [".epub"],
+      "mime": ["application/epub+zip"],
+      "category": "document",
+      "binary": true,
+      "magic_bytes": "PK (zip container; mimetype file is `application/epub+zip`)",
+      "description": "Open ebook standard from the IDPF / W3C. ZIP container holding XHTML content, CSS, images, and metadata, with a spine ordering the reading flow.",
+      "tools": [
+        {"name": "ebooklib", "kind": "library"},
+        {"name": "Calibre", "kind": "app"},
+        {"name": "Sigil", "kind": "app"}
+      ],
+      "open_with": "TextView extracts each chapter's text via `ebooklib` and concatenates into a continuous reading view.",
+      "convert": "To MOBI / AZW: Calibre `ebook-convert in.epub out.mobi`.",
+      "links": [{"title": "EPUB 3.3 spec", "url": "https://www.w3.org/TR/epub-33/"}],
+      "tags": ["document", "ebook"]
+    },
+    {
+      "id": "png",
+      "name": "PNG (Portable Network Graphics)",
+      "extensions": [".png"],
+      "mime": ["image/png"],
+      "category": "image",
+      "binary": true,
+      "magic_bytes": "\\x89PNG\\r\\n\\x1a\\n",
+      "description": "Lossless raster image format with 8/16-bit per-channel RGB(A), palette-indexed, and grayscale modes. Successor to GIF for static images; widely supported in browsers and tooling.",
+      "tools": [
+        {"name": "Pillow", "kind": "library"},
+        {"name": "ImageMagick", "kind": "cli"},
+        {"name": "pngcrush / oxipng", "kind": "cli"}
+      ],
+      "open_with": "TextView's image viewer with brightness / contrast / saturation / gamma sliders, eyedropper, crop, and RGB histogram.",
+      "tags": ["image", "lossless"]
+    },
+    {
+      "id": "jpeg",
+      "name": "JPEG",
+      "extensions": [".jpg", ".jpeg", ".jpe"],
+      "mime": ["image/jpeg"],
+      "category": "image",
+      "binary": true,
+      "magic_bytes": "\\xff\\xd8\\xff",
+      "description": "Lossy raster image format optimized for photographs. DCT-based compression; quality is tunable. Embeds EXIF metadata (camera model, exposure, GPS) commonly read by digital cameras.",
+      "open_with": "TextView's image viewer + EXIF metadata panel (Ctrl+I) — camera model, exposure, GPS coordinates, capture time.",
+      "tags": ["image", "lossy", "photo"]
+    },
+    {
+      "id": "webp",
+      "name": "WebP",
+      "extensions": [".webp"],
+      "mime": ["image/webp"],
+      "category": "image",
+      "binary": true,
+      "description": "Google's modern image format. Supports both lossy (VP8) and lossless (VP8L) compression, plus animation (a smaller alternative to GIF) and alpha.",
+      "open_with": "Static and animated WebP both supported; multi-frame animations get a frame navigator in the image dock.",
+      "tags": ["image", "animated"]
+    },
+    {
+      "id": "svg",
+      "name": "SVG (Scalable Vector Graphics)",
+      "extensions": [".svg", ".svgz"],
+      "mime": ["image/svg+xml"],
+      "category": "image",
+      "binary": false,
+      "description": "XML-based vector image format. Resolution-independent; supports CSS, animation, gradients, filters. Native to browsers and most modern design tools.",
+      "open_with": "Rasterized for display via Qt's image reader; raw XML viewable by toggling source view.",
+      "tags": ["image", "vector"]
+    },
+    {
+      "id": "tiff",
+      "name": "TIFF (Tagged Image File Format)",
+      "extensions": [".tif", ".tiff"],
+      "mime": ["image/tiff"],
+      "category": "image",
+      "binary": true,
+      "magic_bytes": "II* (little-endian) or MM* (big-endian)",
+      "description": "Flexible raster format supporting multiple compressions (LZW, ZIP, JPEG), multiple pages per file, layers, alpha, and 16/32-bit depth. Common in publishing, scientific imaging, and GIS.",
+      "open_with": "Multi-page TIFF supported with a page navigator; high-bit-depth images displayed via Pillow.",
+      "tags": ["image", "multi-page"]
+    },
+    {
+      "id": "mp4",
+      "name": "MP4 (MPEG-4 Part 14)",
+      "extensions": [".mp4", ".m4v", ".m4a"],
+      "mime": ["video/mp4", "audio/mp4"],
+      "category": "video",
+      "binary": true,
+      "description": "ISO/IEC 14496-14 container for video, audio, subtitles, and metadata. Most common consumer video format; usually pairs H.264 or H.265 video with AAC audio.",
+      "open_with": "TextView plays video files via Qt's QMediaPlayer with transport bar (play / pause, seek slider, mute, volume). Codec coverage depends on the host's Qt+FFmpeg build.",
+      "tags": ["video", "container"]
+    },
+    {
+      "id": "mp3",
+      "name": "MP3 (MPEG-1 Audio Layer III)",
+      "extensions": [".mp3"],
+      "mime": ["audio/mpeg"],
+      "category": "audio",
+      "binary": true,
+      "magic_bytes": "ID3 (with ID3 tag) or \\xff\\xfb (raw MPEG frame)",
+      "description": "Lossy audio compression format that defined consumer digital audio in the 1990s–2000s. Patents have expired; tooling is universal.",
+      "tags": ["audio", "lossy"]
+    },
+    {
+      "id": "wav",
+      "name": "WAV (Waveform Audio File Format)",
+      "extensions": [".wav", ".wave"],
+      "mime": ["audio/wav"],
+      "category": "audio",
+      "binary": true,
+      "magic_bytes": "RIFF...WAVE",
+      "description": "Microsoft / IBM uncompressed audio container. Stores PCM samples directly; large file sizes but lossless and trivial to process.",
+      "tags": ["audio", "lossless"]
+    },
+    {
+      "id": "flac",
+      "name": "FLAC (Free Lossless Audio Codec)",
+      "extensions": [".flac"],
+      "mime": ["audio/flac"],
+      "category": "audio",
+      "binary": true,
+      "magic_bytes": "fLaC",
+      "description": "Open-source lossless audio compression. Typically 50–60% the size of equivalent WAV, with bit-perfect reconstruction. Common for archival rips and audiophile distribution.",
+      "tags": ["audio", "lossless"]
+    },
+    {
+      "id": "zip",
+      "name": "ZIP archive",
+      "extensions": [".zip", ".jar", ".war", ".egg", ".whl", ".xpi", ".apk", ".docx", ".epub", ".odt", ".pptx", ".xlsx"],
+      "mime": ["application/zip"],
+      "category": "archive",
+      "binary": true,
+      "magic_bytes": "PK\\x03\\x04",
+      "description": "Phil Katz's archive format from 1989. The container under the hood for many modern document formats (Office Open XML, EPUB, ODF, JAR, APK, Python wheels, browser extensions).",
+      "tools": [
+        {"name": "unzip / zip", "kind": "cli"},
+        {"name": "Python zipfile", "kind": "library"},
+        {"name": "7-Zip", "kind": "app"}
+      ],
+      "open_with": "TextView's unknown-file inspector identifies the archive and shows hex preview. Use `unzip -l` for contents.",
+      "tags": ["archive", "container"]
+    },
+    {
+      "id": "tar-gz",
+      "name": "Gzip-compressed tar archive",
+      "extensions": [".tar.gz", ".tgz"],
+      "mime": ["application/gzip"],
+      "category": "archive",
+      "binary": true,
+      "description": "POSIX tar archive (uncompressed sequential file concatenation) wrapped in Gzip. Standard for source distribution on Unix-like systems.",
+      "tools": [{"name": "tar", "kind": "cli"}],
+      "open_with": "Use `tar -tzf in.tar.gz` to list, `tar -xzf in.tar.gz` to extract.",
+      "tags": ["archive", "compressed"]
+    },
+    {
+      "id": "parquet",
+      "name": "Apache Parquet",
+      "extensions": [".parquet", ".pq"],
+      "mime": ["application/x-parquet"],
+      "category": "data",
+      "binary": true,
+      "magic_bytes": "PAR1 (header and footer)",
+      "description": "Columnar storage format for analytical workloads. Per-column compression and metadata in a footer; the standard interchange format for data lakes.",
+      "use_cases": ["Storing analytics tables in S3 / data lakes", "Interchange between Spark / Dask / DuckDB / pandas", "Compressed time-series exports"],
+      "tools": [
+        {"name": "pyarrow", "kind": "library", "url": "https://arrow.apache.org/docs/python/parquet.html"},
+        {"name": "DuckDB", "kind": "cli", "url": "https://duckdb.org/docs/data/parquet.html"},
+        {"name": "Apache Spark", "kind": "framework"}
+      ],
+      "open_with": "TextView's unknown-file inspector identifies it via the PAR1 magic. Use `pandas.read_parquet('file')` or `duckdb` to inspect rows.",
+      "convert": "To CSV: `duckdb -c \"COPY (FROM 'in.parquet') TO 'out.csv'\"`.",
+      "links": [{"title": "Parquet spec", "url": "https://parquet.apache.org/docs/"}],
+      "tags": ["columnar", "compressed", "analytics", "big-data"]
+    },
+    {
+      "id": "hdf5",
+      "name": "HDF5 (Hierarchical Data Format 5)",
+      "extensions": [".h5", ".hdf5", ".he5"],
+      "mime": ["application/x-hdf5"],
+      "category": "data",
+      "binary": true,
+      "magic_bytes": "\\x89HDF\\r\\n\\x1a\\n",
+      "description": "Self-describing binary format for large numerical datasets. Hierarchical structure (groups + datasets) with chunked storage, compression, and partial I/O. Standard in scientific computing.",
+      "use_cases": ["Large numerical arrays (numpy / scipy)", "Climate / astronomy datasets", "Deep learning weights (legacy Keras)"],
+      "tools": [
+        {"name": "h5py", "kind": "library"},
+        {"name": "PyTables", "kind": "library"},
+        {"name": "h5dump", "kind": "cli"},
+        {"name": "HDFView", "kind": "app"}
+      ],
+      "open_with": "Inspector shows magic-byte detection. Inspect contents with `h5py.File(path, 'r')` or `h5dump -H file.h5`.",
+      "links": [{"title": "HDFGroup", "url": "https://www.hdfgroup.org/solutions/hdf5/"}],
+      "tags": ["scientific", "numerical"]
+    },
+    {
+      "id": "sqlite",
+      "name": "SQLite database",
+      "extensions": [".sqlite", ".sqlite3", ".db", ".db3"],
+      "mime": ["application/vnd.sqlite3"],
+      "category": "database",
+      "binary": true,
+      "magic_bytes": "SQLite format 3\\x00",
+      "description": "Embedded relational database in a single file. Most-deployed database in the world (every browser, OS, mobile app). Full SQL, transactional, zero-config.",
+      "tools": [
+        {"name": "sqlite3 CLI", "kind": "cli"},
+        {"name": "DB Browser for SQLite", "kind": "app"},
+        {"name": "Python sqlite3", "kind": "library"}
+      ],
+      "open_with": "Inspector identifies via magic bytes. `sqlite3 file.db` for an interactive prompt; `sqlite3 file.db .schema` to dump schema.",
+      "tags": ["database", "embedded"]
+    },
+    {
+      "id": "pickle",
+      "name": "Python Pickle",
+      "extensions": [".pkl", ".pickle"],
+      "mime": ["application/x-python-pickle"],
+      "category": "data",
+      "binary": true,
+      "magic_bytes": "\\x80 (protocol marker, varies by version)",
+      "description": "Python's native serialization format. Can serialize arbitrary objects, including code references — which means **loading an untrusted pickle is equivalent to executing arbitrary code**.",
+      "use_cases": ["Caching computation results", "ML model checkpoints (legacy scikit-learn / PyTorch state_dict)", "IPC between Python processes"],
+      "open_with": "TextView's inspector flags the protocol byte. **Never `pickle.load` an untrusted file.** Use `pickletools.dis(open('f.pkl', 'rb'))` to inspect bytecode without executing.",
+      "tags": ["python", "serialization", "untrusted-risky"]
+    },
+    {
+      "id": "stl",
+      "name": "STL (stereolithography)",
+      "extensions": [".stl"],
+      "mime": ["model/stl"],
+      "category": "3d",
+      "binary": true,
+      "description": "3D mesh format from 3D Systems (1987). Stores surface geometry as a list of triangles (vertices + normals); no color, texture, or hierarchy. The lingua franca of 3D printing.",
+      "tools": [
+        {"name": "Blender", "kind": "app"},
+        {"name": "PrusaSlicer / Cura", "kind": "app"},
+        {"name": "trimesh", "kind": "library"}
+      ],
+      "tags": ["3d", "mesh", "printing"]
+    },
+    {
+      "id": "gltf",
+      "name": "glTF (GL Transmission Format)",
+      "extensions": [".gltf", ".glb"],
+      "mime": ["model/gltf+json", "model/gltf-binary"],
+      "category": "3d",
+      "binary": false,
+      "description": "Khronos's 'JPEG of 3D' — JSON-based scene description with PBR materials, animations, and skins. Binary variant `.glb` packs everything into a single file. Native to modern game engines and AR/VR.",
+      "tags": ["3d", "scene", "web"]
+    },
+    {
+      "id": "geojson",
+      "name": "GeoJSON",
+      "extensions": [".geojson"],
+      "mime": ["application/geo+json"],
+      "category": "data",
+      "binary": false,
+      "description": "JSON-based format for geographic data (Points, Lines, Polygons, FeatureCollections). RFC 7946. Native to most web mapping APIs (Mapbox, Leaflet, deck.gl).",
+      "tools": [{"name": "Shapely / Fiona", "kind": "library"}, {"name": "QGIS", "kind": "app"}],
+      "tags": ["geo", "spatial"]
+    },
+    {
+      "id": "shapefile",
+      "name": "Esri Shapefile",
+      "extensions": [".shp", ".shx", ".dbf", ".prj"],
+      "mime": ["application/x-esri-shape"],
+      "category": "data",
+      "binary": true,
+      "description": "Legacy GIS vector format. Each dataset is split across at least three files (.shp = geometry, .shx = index, .dbf = attributes); .prj holds the projection. Still ubiquitous despite better successors (GeoPackage, FlatGeobuf).",
+      "tools": [{"name": "GDAL/OGR", "kind": "cli"}, {"name": "QGIS", "kind": "app"}],
+      "tags": ["geo", "spatial", "legacy"]
+    },
+    {
+      "id": "ttf",
+      "name": "TrueType / OpenType font",
+      "extensions": [".ttf", ".otf"],
+      "mime": ["font/ttf", "font/otf"],
+      "category": "font",
+      "binary": true,
+      "description": "Vector font formats with hinting + kerning + ligatures. OpenType extends TrueType with CFF outlines and advanced typographic features. WOFF/WOFF2 are web-compressed variants.",
+      "tools": [{"name": "FontForge", "kind": "app"}, {"name": "fontTools", "kind": "library"}],
+      "tags": ["font", "vector"]
+    },
+    {
+      "id": "elf",
+      "name": "ELF (Executable and Linkable Format)",
+      "extensions": [".out", ".elf", ".so"],
+      "mime": ["application/x-executable"],
+      "category": "binary",
+      "binary": true,
+      "magic_bytes": "\\x7fELF",
+      "description": "Standard binary format for executables, shared libraries, and core dumps on Unix-like systems (Linux, BSDs). Header indicates ABI, ISA, and section layout.",
+      "tools": [{"name": "readelf / objdump / nm", "kind": "cli"}],
+      "tags": ["executable", "linux"]
+    },
+    {
+      "id": "macho",
+      "name": "Mach-O binary",
+      "extensions": [],
+      "mime": ["application/x-mach-binary"],
+      "category": "binary",
+      "binary": true,
+      "magic_bytes": "\\xfe\\xed\\xfa\\xce / \\xfe\\xed\\xfa\\xcf / \\xca\\xfe\\xba\\xbe",
+      "description": "macOS / iOS executable, dylib, and bundle format. Successor to a.out. Universal binaries (`.app/Contents/MacOS/X`) glue multiple architectures together with the `\\xca\\xfe\\xba\\xbe` 'fat' header.",
+      "tools": [{"name": "otool / nm / lipo", "kind": "cli"}],
+      "tags": ["executable", "macos"]
+    },
+    {
+      "id": "pem",
+      "name": "PEM (Privacy-Enhanced Mail) certificate",
+      "extensions": [".pem", ".crt", ".cer", ".key"],
+      "mime": ["application/x-pem-file"],
+      "category": "crypto",
+      "binary": false,
+      "description": "Base64-encoded DER data wrapped in `-----BEGIN ...-----` headers. The standard text-friendly container for X.509 certificates, RSA / EC keys, and CSRs.",
+      "tools": [{"name": "openssl", "kind": "cli"}],
+      "open_with": "Inspect with `openssl x509 -in file.pem -text` (cert) or `openssl rsa -in key.pem -text` (private key — handle carefully).",
+      "tags": ["crypto", "tls", "sensitive"]
+    },
+    {
+      "id": "iso",
+      "name": "ISO 9660 disc image",
+      "extensions": [".iso"],
+      "mime": ["application/x-iso9660-image"],
+      "category": "archive",
+      "binary": true,
+      "description": "Filesystem image of an optical disc (CD/DVD/Blu-ray). On macOS / Linux, mountable read-only with `hdiutil attach` / `mount -o loop`.",
+      "tags": ["archive", "disk-image"]
+    },
+    {
+      "id": "dockerfile",
+      "name": "Dockerfile",
+      "extensions": [".dockerfile"],
+      "filenames": ["Dockerfile", "Containerfile"],
+      "mime": ["text/x-dockerfile"],
+      "category": "config",
+      "binary": false,
+      "description": "Declarative recipe for building OCI container images. A sequence of instructions (`FROM`, `RUN`, `COPY`, `CMD`, …) that Docker / Podman / Buildah execute layer by layer.",
+      "tools": [{"name": "docker / podman / buildah", "kind": "cli"}, {"name": "hadolint (linter)", "kind": "cli"}],
+      "tags": ["devops", "containers"]
+    },
+    {
+      "id": "makefile",
+      "name": "Makefile",
+      "extensions": [".mk", ".mak"],
+      "filenames": ["Makefile", "GNUmakefile", "makefile"],
+      "category": "config",
+      "binary": false,
+      "description": "Build script for `make`. Each rule has a target, prerequisites, and a recipe (tab-indented commands). GNU make extends POSIX make with pattern rules, functions, and variable expansion.",
+      "tags": ["build", "automation"]
+    }
+  ]
+}

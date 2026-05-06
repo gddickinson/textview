@@ -39,6 +39,12 @@ plugins to teach the app new file formats.
   TOML, CSV / TSV (sortable table mode with stats and chart picker),
   PDF, DOCX / RTF / EPUB / ODT, images (incl. animated WebP / TIFF /
   GIF), video, Jupyter notebooks. → [`docs/file-formats.md`](docs/file-formats.md)
+- **Built-in format reference.** A curated database of 40+ file
+  formats — descriptions, magic bytes, tools, how-to-open / convert
+  notes — searchable from **Help → File formats database… (Ctrl+Shift+D)**.
+  The unknown-file inspector auto-attaches the matching entry; the
+  chat agent has lookup / search / extend tools.
+  → [`docs/file-formats-db.md`](docs/file-formats-db.md)
 - **LSP support** for Python (pyright), TypeScript, Go (gopls), Rust
   (rust-analyzer), C/C++ (clangd) — hover, go-to-definition, find
   references, diagnostics panel. → [`docs/lsp.md`](docs/lsp.md)
@@ -88,6 +94,7 @@ You can also drag-and-drop files onto the window to open them.
 | Every supported format | [`docs/file-formats.md`](docs/file-formats.md) |
 | Workspace RAG (deep dive) | [`docs/workspace-rag.md`](docs/workspace-rag.md) |
 | Unknown-file workflow + safety gates | [`docs/unknown-files.md`](docs/unknown-files.md) |
+| File-formats database | [`docs/file-formats-db.md`](docs/file-formats-db.md) |
 | Chat / LLM panel | [`docs/chat.md`](docs/chat.md) |
 | LSP setup per language | [`docs/lsp.md`](docs/lsp.md) |
 | Notebook viewer / runner | [`docs/notebook.md`](docs/notebook.md) |

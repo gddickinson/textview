@@ -131,4 +131,5 @@ def build(w):
          w.action_docs_scripts, w.action_docs_plugins, w.action_docs_hooks, None,
          w.action_docs_agent_api, w.action_docs_control, w.action_docs_arch,
          w.action_docs_trouble, None,
+         w.action_format_db, None,
          w.action_cheat_sheet)

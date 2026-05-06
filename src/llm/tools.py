@@ -15,6 +15,7 @@ from .tools_memory import MEMORY_TOOLS_RO, MEMORY_TOOLS_ACTION
 from .tools_docs import DOC_TOOLS
 from .tools_workspace import WORKSPACE_TOOLS
 from .tools_inspect import INSPECT_TOOLS_RO, INSPECT_TOOLS_ACTION
+from .tools_format_db import FORMAT_DB_TOOLS_RO, FORMAT_DB_TOOLS_ACTION
 
 
 # -- read-only implementations ------------------------------------------------
@@ -249,6 +250,7 @@ READ_ONLY_TOOLS: list[Tool] = [
     *DOC_TOOLS,
     *WORKSPACE_TOOLS,
     *INSPECT_TOOLS_RO,
+    *FORMAT_DB_TOOLS_RO,
 ]
 
 
@@ -339,6 +341,7 @@ ACTION_TOOLS: list[Tool] = [
     *SCRIPT_TOOLS_ACTION,
     *MEMORY_TOOLS_ACTION,
     *INSPECT_TOOLS_ACTION,
+    *FORMAT_DB_TOOLS_ACTION,
 ]
 
 

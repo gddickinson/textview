@@ -90,6 +90,9 @@ def build(w):
     w.action_docs_overview = mk("Overview",               _opendoc("overview"))
     w.action_docs_workspace = mk("Workspace RAG",          _opendoc("workspace-rag"))
     w.action_docs_unknown  = mk("Unknown files",          _opendoc("unknown-files"))
+    from .format_db_dialog import show_format_db
+    w.action_format_db = mk("File formats database…",
+                            lambda: show_format_db(w), "Ctrl+Shift+D")
     w.action_docs_formats  = mk("File formats",           _opendoc("file-formats"))
     w.action_docs_shortcuts = mk("Keyboard reference",    _opendoc("shortcuts"))
     w.action_docs_notebook = mk("Notebook guide",         _opendoc("notebook"))
