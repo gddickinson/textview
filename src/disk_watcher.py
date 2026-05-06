@@ -43,4 +43,6 @@ class DiskWatcher(QObject):
             )
             if ret != QMessageBox.StandardButton.Yes:
                 return
-        self.window.open_file(path)
+        # Disk-watcher already ran its own prompt above when relevant; skip
+        # `confirm_discard` so the user isn't asked twice.
+        self.window.open_file(path, confirm=False)

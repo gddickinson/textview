@@ -54,8 +54,25 @@ class AppAPI:
     def save(self) -> bool:
         return bool(self._w.edit.save())
 
-    def save_as(self, path: str) -> None:
-        Path(path).write_text(self._w._current_content)
+    def save_as(self, path: str, *, overwrite: bool = False) -> None:
+        """Write the current buffer to `path`. Refuses to clobber existing
+        files unless `overwrite=True`. For document formats (PDF / DOCX /
+        RTF / EPUB / ODT) the buffer holds *extracted plain text*, not the
+        original bytes — writing it would corrupt the file, so this method
+        refuses outright. Callers that want a real export should go through
+        the Export As menu (`exporter.py`)."""
+        from .file_loader import DOCUMENT_FORMATS
+        target = Path(path).expanduser()
+        if self._w._current_format in DOCUMENT_FORMATS:
+            raise ValueError(
+                f"refusing to save_as for format {self._w._current_format!r}: "
+                f"the buffer is extracted text, not the original document. "
+                f"Use the Export As menu instead.")
+        if target.exists() and target.resolve() != Path(
+                self._w._current_path or "").resolve() and not overwrite:
+            raise FileExistsError(
+                f"{target} already exists. Pass overwrite=True to replace it.")
+        target.write_text(self._w._current_content, encoding="utf-8")
 
     def reload(self) -> None:
         self._w.on_reload()

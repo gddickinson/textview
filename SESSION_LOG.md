@@ -1,5 +1,71 @@
 # SESSION_LOG.md
 
+## 2026-05-05 — Silent-overwrite audit + fixes
+
+User asked to verify nothing modifies user files without confirmation.
+Full audit of every file-write path; three real issues found and fixed.
+
+### Audit summary
+
+**On-open is safe** — `load_file`, the per-format viewers
+(`_pdf.load`, `_rich.load`, `image_view.load`, `notebook_view.load`),
+the disk watcher, and the format-handler registry are all read-only.
+No autosave timer exists. Format handlers are advisory (shown in the
+unknown-file report; never auto-invoked).
+
+**On-save is gated** — `EditController.save` only fires from Ctrl+S,
+the Save action, the chat-agent `save` tool (gated as `destructive=True`),
+and `runner_save_before_run` (when the user presses F5 and has a
+modified buffer). The format-on-save / trim-trailing-whitespace /
+ensure-final-newline transforms only run during an explicit save.
+
+### Fixed: AppAPI.save_as silently clobbers any path
+
+`api.save_as(path)` previously wrote `_current_content` to ANY path
+with no overwrite check, format-blind. A plugin/hook calling
+`api.save_as("/important.pdf")` would overwrite the file with extracted
+plain text — corrupting it. Now:
+
+- Refuses to overwrite an existing file unless `overwrite=True`.
+- Refuses outright for document formats (PDF / DOCX / RTF / EPUB / ODT)
+  because the buffer holds extracted plain text, not original bytes.
+- Allows writing to the current path (it's just an explicit save).
+
+### Fixed: open_file bypassed confirm-discard from ~14 entry points
+
+`MainWindow.open_file(path)` was called without `confirm_discard()`
+from recent-files menu, project panel, citation click, drag-drop,
+quick-open (Ctrl+P), find-in-project, image folder navigation,
+control-server `open_file` op, LSP go-to-definition, AppAPI.open,
+agent `open_file` tool. The Open... dialog and tab switch already
+prompted, but other entry points silently lost unsaved edits.
+
+Fix: `open_file(path, *, confirm: bool = True)` now runs the
+discard prompt by default. Internal callers that already prompted
+(`on_open`, `_on_tab_open`, `disk_watcher._reload`) pass `confirm=False`
+to avoid double-asking.
+
+### Fixed: notebook dirty state was invisible to confirm-discard
+
+`NotebookView` exposes a `dirty_changed(bool)` signal but it was never
+wired anywhere. Running cells (which accumulates outputs into the
+in-memory notebook) didn't set `EditController.modified`, so closing
+the file or switching tabs lost the changes silently.
+
+Fix: connect `notebook_view.dirty_changed` to a new
+`_on_notebook_dirty` slot that mirrors the flag into
+`EditController.modified` so the standard prompt fires.
+
+### Tests
+
+11 new tests in `tests/test_safety_overwrite.py`:
+- `save_as` to fresh path / refuses clobber / honours `overwrite=True`
+  / allows current path / refuses every document format.
+- `open_file` signature exposes the `confirm` kwarg with default True.
+- `notebook_view.dirty_changed` is wired into the app.
+
+**313 / 313 pass.**
+
 ## 2026-05-04 — Initial build
 
 - Project goal: a beautiful PyQt6 GUI for displaying text, code, markup, and

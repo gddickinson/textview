@@ -72,6 +72,11 @@ class MainWindow(QMainWindow):
         self.viewer = TextViewer(self)
         self.viewer.code.textChanged.connect(self._on_code_text_changed); self.viewer.code.cursor_paused.connect(self._on_cursor_paused)
         self.viewer.notebook_view.status.connect(lambda m: self.statusBar().showMessage(m, 5000))
+        # Surface notebook dirty state through EditController so the standard
+        # confirm-discard prompt fires when the user runs cells then tries to
+        # close the file or open a different one. Without this, in-memory
+        # outputs would be lost silently.
+        self.viewer.notebook_view.dirty_changed.connect(self._on_notebook_dirty)
         self.search_bar = SearchBar(self)
         self.tab_bar = TabBar(self)
         self.tab_bar.requested_open.connect(self._on_tab_open); self.tab_bar.requested_clear.connect(self._show_welcome)
@@ -182,9 +187,13 @@ class MainWindow(QMainWindow):
     def on_open(self):
         if not self.edit.confirm_discard(): return
         path, _ = QFileDialog.getOpenFileName(self, "Open file", "", file_dialog_filter())
-        if path: self.open_file(path)
+        if path: self.open_file(path, confirm=False)
 
-    def open_file(self, path):
+    def open_file(self, path, *, confirm: bool = True):
+        # Every entry point that switches the current buffer must check for
+        # unsaved changes. Callers that already prompted (Open dialog, tab
+        # switch, disk-reload prompt) pass confirm=False to avoid double-asking.
+        if confirm and not self.edit.confirm_discard(): return
         try:
             content, encoding, fmt = load_file(path)
         except FileNotFoundError:
@@ -231,7 +240,7 @@ class MainWindow(QMainWindow):
 
     def _on_tab_open(self, path: str):
         if path != self._current_path and self.edit.confirm_discard():
-            self.open_file(path)
+            self.open_file(path, confirm=False)
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls(): event.acceptProposedAction()
@@ -253,6 +262,12 @@ class MainWindow(QMainWindow):
 
     def _on_code_text_changed(self):
         if self._current_path and self.edit.editing: self.lsp.on_text_changed(self._current_path, self.viewer.code.toPlainText())
+
+    def _on_notebook_dirty(self, on: bool):
+        # Mirror notebook dirty state into EditController so confirm_discard
+        # picks up unsaved cell edits / outputs when the user navigates away.
+        if self._current_format != "notebook": return
+        self.edit.modified = bool(on); self.edit.state_changed.emit()
 
     def _lsp_hover_at_cursor(self): self._lsp_hover_for(self.viewer.code.textCursor())
     def _on_cursor_paused(self, p): self._lsp_hover_for(self.viewer.code.cursorForPosition(p))
