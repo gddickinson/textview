@@ -1,0 +1,24 @@
+# pip dependencies — see environment.yml for conda + pinned sqlite.
+PyQt6>=6.5
+PyQt6-WebEngine>=6.5
+Pygments>=2.15
+markdown>=3.4
+Pillow>=10.0
+pypdf>=3.0
+python-docx>=1.0
+mammoth>=1.6
+striprtf>=0.0.26
+EbookLib>=0.18
+chardet>=5.0
+numpy>=1.26
+matplotlib>=3.8
+nbformat>=5.10
+pyte>=0.8
+requests>=2.31
+jupyter_client>=8.0
+ipykernel>=6.25
+qtconsole>=5.5
+keyring>=24.0
+anthropic>=0.20
+openai>=1.30
+pytest>=8.0

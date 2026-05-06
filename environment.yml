@@ -1,0 +1,50 @@
+# conda env for TextView. conda-forge channel for system bits (especially
+# sqlite — anaconda's default _sqlite3.so has an ABI mismatch on macOS that
+# breaks IPython's `import sqlite3`). Python packages go via pip because the
+# PyQt6 wheels on PyPI include a bundled Qt and avoid native-binding pain.
+#
+# Create with:   conda env create -f environment.yml
+# Activate with: conda activate textview
+# Run with:      python main.py
+name: textview
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - sqlite>=3.45         # dodges anaconda's _sqlite3_enable_load_extension miss
+  - pip
+  - pip:
+    # Core GUI
+    - PyQt6>=6.5
+    - PyQt6-WebEngine>=6.5
+    # Rendering / formatting
+    - Pygments>=2.15
+    - markdown>=3.4
+    - Pillow>=10.0
+    # Documents
+    - pypdf>=3.0
+    - python-docx>=1.0
+    - mammoth>=1.6
+    - striprtf>=0.0.26
+    - EbookLib>=0.18
+    - chardet>=5.0
+    # Data / charts
+    - numpy>=1.26
+    - matplotlib>=3.8
+    - nbformat>=5.10
+    # Terminal emulator
+    - pyte>=0.8
+    # Networking (for LLM providers, manual HTTP, etc.)
+    - requests>=2.31
+    # Jupyter kernel + console
+    - jupyter_client>=8.0
+    - ipykernel>=6.25
+    - qtconsole>=5.5
+    # Credentials
+    - keyring>=24.0
+    # LLM providers (optional but used by chat panel if keys are set)
+    - anthropic>=0.20
+    - openai>=1.30
+    # Tests
+    - pytest>=8.0
