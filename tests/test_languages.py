@@ -60,6 +60,8 @@ CASES = [
     ("Rakefile", "ruby"), ("Gemfile", "ruby"),
     # Build by extension
     ("build.cmake", "cmake"), ("rules.mk", "make"),
+    # LaTeX
+    ("paper.tex", "latex"), ("article.latex", "latex"), ("doc.ltx", "latex"),
 ]
 
 
@@ -73,7 +75,8 @@ def test_pygments_can_resolve_every_format():
     from pygments.lexers import get_lexer_by_name
     formats = set(FORMAT_MAP.values())
     # Non-code formats handled elsewhere (no lexer needed).
-    skip = {"image", "video", "notebook", "pdf", "docx", "rtf", "epub", "odt",
+    skip = {"image", "video", "audio", "notebook",
+            "pdf", "docx", "rtf", "epub", "odt",
             "plain", "csv"}
     for fmt in formats - skip:
         try: get_lexer_by_name(fmt)
@@ -84,7 +87,7 @@ def test_supported_extensions_includes_new_ones():
     from src.file_loader import supported_extensions
     exts = supported_extensions()
     for must in (".r", ".jl", ".lua", ".cs", ".ino", ".pde", ".sol",
-                 ".asm", ".f90"):
+                 ".asm", ".f90", ".tex", ".latex", ".ltx"):
         assert must in exts, f"{must} missing from supported_extensions()"
 
 

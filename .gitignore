@@ -17,3 +17,6 @@ dist/
 .idea/
 .coverage
 htmlcov/
+
+# Personal sample files (do not commit)
+sample_files/george_dickinson_CV_Anthropic.tex

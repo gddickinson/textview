@@ -33,11 +33,20 @@ def build(w):
 
     w.action_open = mk("Open…", w.on_open, SK.Open)
     w.action_new_tab = mk("New tab", w._show_welcome, "Ctrl+N")
+    from .templates_dialog import show_new_from_template as _show_new_from_template
+    w.action_new_from_template = mk(
+        "New from template…",
+        lambda: _show_new_from_template(w), "Ctrl+Alt+N",
+    )
     from .app import MainWindow
     w.action_new_window = mk("New window", lambda: MainWindow.spawn(), "Ctrl+Shift+N")
     w.action_reload = mk("Reload", w.on_reload, "Ctrl+R")
     w.action_close_file = mk("Close file", w._show_welcome, "Ctrl+W")
     w.action_close_all = mk("Close all tabs", w.tab_bar.close_all, "Ctrl+Shift+Alt+W")
+    from . import tab_actions as _tab_actions
+    w.action_detach_tab = mk("Detach tab to new window",
+                             lambda: _tab_actions.detach_current_tab(w),
+                             "Ctrl+Shift+T")
     w.action_export_html = mk("Export as HTML…", w.exp.html)
     w.action_export_pdf = mk("Export as PDF…", w.exp.pdf)
     w.action_export_md = mk("Export as Markdown…", w.exp.md)
@@ -60,6 +69,7 @@ def build(w):
     w.action_open_url = mk("Open URL…", w.on_open_url, "Ctrl+L")
     w.action_home = mk("Home page", w.web.go_home, "Ctrl+Home")
     w.action_bookmark = mk("Bookmark this page", w.bookmarks.add_current, "Ctrl+D")
+    w.action_compile_latex = mk("Compile LaTeX → PDF", w.compile_latex, "F6")
     w.action_run = mk("Run", w.run.run_current, "F5")
     w.action_run_selection = mk("Run selection", w.run.run_selection, "Ctrl+Return")
     w.action_stop_run = mk("Stop", w.run.stop, "Ctrl+.")

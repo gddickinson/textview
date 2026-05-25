@@ -108,23 +108,15 @@ class EditController(QObject):
             return False
 
     def save_as(self) -> bool:
-        suggested = self.window._current_path or "untitled.txt"
-        path, _ = QFileDialog.getSaveFileName(self.window, "Save as", suggested)
-        if not path:
-            return False
-        try:
-            content = self._prepare_save_text()
-            Path(path).write_text(content, encoding="utf-8")
-            self.window.viewer.code.setPlainText(content)
-            self.window._current_path = path
-            self.window._current_content = content
-            self.window.viewer.code.document().setModified(False)
-            self.window.statusBar().showMessage(f"Saved → {path}", 3000)
-            self.window.setWindowTitle(f"TextView — {Path(path).name}")
-            return True
-        except OSError as e:
-            QMessageBox.critical(self.window, "Save failed", str(e))
-            return False
+        """Format-aware Save As. Delegates to `save_as.show_save_as_with_conversion`
+        so a Markdown buffer saved to `.html` becomes rendered HTML on disk,
+        a CSV saved to `.xlsx` becomes an Excel file, etc. When the chosen
+        extension matches the current format (or no converter exists for
+        the pair), the buffer is written as-is. On success the file is
+        re-opened so view mode / highlighting reflect the new format.
+        """
+        from .save_as import show_save_as_with_conversion
+        return show_save_as_with_conversion(self.window)
 
     def confirm_discard(self) -> bool:
         """Return True if it's OK to discard the current buffer's changes."""

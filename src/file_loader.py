@@ -72,6 +72,54 @@ FORMAT_MAP = {
     ".mk": "make",
     ".mak": "make",
     ".ipynb": "notebook",
+    # LaTeX source — edited as text, can be compiled to PDF on demand.
+    ".tex": "latex", ".latex": "latex", ".ltx": "latex",
+    ".bib": "bibtex",
+    # Markup / documentation alternatives
+    ".typ": "typst",
+    ".org": "org",
+    ".adoc": "plain", ".asciidoc": "plain",   # Pygments has no AsciiDoc lexer
+    ".mediawiki": "wikitext", ".wiki": "wikitext",
+    ".textile": "plain",
+    ".pod": "perl",                            # Plain Old Documentation
+    # IaC / DevOps configuration as code
+    ".tf": "terraform", ".tfvars": "terraform",
+    ".hcl": "hcl", ".nix": "nix",
+    ".proto": "protobuf", ".capnp": "capnp",
+    ".graphql": "graphql", ".gql": "graphql",
+    ".prisma": "graphql",
+    ".env": "bash",                            # KEY=VALUE — bash highlights fine
+    ".editorconfig": "ini",
+    # Newline-delimited JSON variants
+    ".ndjson": "json", ".jsonl": "json", ".geojson": "json",
+    # Subtitles
+    ".srt": "plain", ".vtt": "plain",
+    ".ass": "ini", ".ssa": "ini",
+    # Email / calendar / contacts
+    ".eml": "plain", ".mbox": "plain",
+    ".ics": "plain", ".vcs": "plain", ".vcf": "plain",
+    # More languages
+    ".rkt": "racket",
+    ".scm": "scheme", ".ss": "scheme",
+    ".lisp": "common-lisp", ".lsp": "common-lisp", ".cl": "common-lisp",
+    ".el": "elisp",
+    ".tcl": "tcl",
+    ".awk": "awk",
+    ".gnuplot": "gnuplot", ".gp": "gnuplot",
+    ".lean": "lean4",
+    ".idr": "idris",
+    ".ada": "ada", ".adb": "ada", ".ads": "ada",
+    ".pas": "delphi", ".pp": "delphi",
+    ".m": "matlab",                            # also Objective-C; matlab is more common in this app's audience
+    ".nb": "mathematica", ".wl": "mathematica", ".wls": "mathematica",
+    ".sas": "sas",
+    ".do": "stata",
+    # Audio (played via QMediaPlayer, no text content)
+    ".mp3": "audio", ".wav": "audio", ".flac": "audio",
+    ".ogg": "audio", ".oga": "audio", ".opus": "audio",
+    ".aac": "audio", ".m4a": "audio", ".wma": "audio",
+    ".aiff": "audio", ".aif": "audio", ".amr": "audio",
+    ".mid": "audio", ".midi": "audio",
     # Documents (extracted to text)
     ".pdf": "pdf", ".docx": "docx", ".rtf": "rtf",
     ".epub": "epub", ".odt": "odt",
@@ -89,6 +137,9 @@ FORMAT_MAP = {
 DOCUMENT_FORMATS = {"pdf", "docx", "rtf", "epub", "odt"}
 IMAGE_FORMATS = {"image"}
 VIDEO_FORMATS = {"video"}
+AUDIO_FORMATS = {"audio"}
+# Media that go through QMediaPlayer rather than the text pipeline.
+MEDIA_FORMATS = VIDEO_FORMATS | AUDIO_FORMATS
 
 ENCODINGS_TO_TRY = ["utf-8", "utf-8-sig", "utf-16", "latin-1", "cp1252"]
 
@@ -106,6 +157,23 @@ FILENAME_MAP = {
     "podfile": "ruby",
     "vagrantfile": "ruby",
     "fastfile": "ruby",
+    # Common "no extension" config/dotfiles
+    ".gitignore": "ini", ".gitattributes": "ini",
+    ".dockerignore": "ini",
+    ".editorconfig": "ini",
+    ".env": "bash",
+    ".npmrc": "ini", ".yarnrc": "ini",
+    # Lock files — JSON content is most common; the YAML lock files (poetry / pubspec)
+    # are tagged accordingly.
+    "package-lock.json": "json",
+    "yarn.lock": "yaml",
+    "pnpm-lock.yaml": "yaml",
+    "cargo.lock": "toml",
+    "poetry.lock": "toml",
+    "pipfile.lock": "json",
+    "composer.lock": "json",
+    "gemfile.lock": "ruby",
+    "go.sum": "plain", "go.mod": "plain",
 }
 
 
@@ -132,6 +200,14 @@ def is_video(path) -> bool:
     return detect_format(path) in VIDEO_FORMATS
 
 
+def is_audio(path) -> bool:
+    return detect_format(path) in AUDIO_FORMATS
+
+
+def is_media(path) -> bool:
+    return detect_format(path) in MEDIA_FORMATS
+
+
 def supported_extensions():
     return sorted(FORMAT_MAP.keys())
 
@@ -152,15 +228,23 @@ def file_dialog_filter() -> str:
     return ";;".join([
         "All supported (*.txt *.log *.md *.markdown *.rst *.html *.htm *.xml "
         "*.json *.yaml *.yml *.csv *.tsv *.toml *.ini *.cfg *.conf "
-        f"{code_exts.replace('.', '*.')} *.pdf *.docx *.rtf *.epub *.odt)",
+        f"{code_exts.replace('.', '*.')} *.tex *.latex *.ltx "
+        "*.pdf *.docx *.rtf *.epub *.odt)",
         "Text (*.txt *.log *.rst)",
         "Markdown (*.md *.markdown)",
         "Markup (*.html *.htm *.xml)",
         "Data (*.json *.yaml *.yml *.csv *.tsv *.toml *.ini *.cfg *.conf)",
         f"Code ({code_exts.replace('.', '*.')})",
+        "LaTeX (*.tex *.latex *.ltx *.bib)",
+        "Markup / docs (*.adoc *.asciidoc *.org *.typ *.mediawiki *.wiki *.textile)",
+        "DevOps / IaC (*.tf *.tfvars *.hcl *.nix *.proto *.graphql *.gql *.prisma)",
+        "JSON variants (*.json *.ndjson *.jsonl *.geojson)",
+        "Email / calendar / contacts (*.eml *.mbox *.ics *.vcs *.vcf)",
+        "Subtitles (*.srt *.vtt *.ass *.ssa)",
         "Documents (*.pdf *.docx *.rtf *.epub *.odt)",
         "Images (*.png *.jpg *.jpeg *.gif *.bmp *.webp *.tif *.tiff *.svg *.ico *.heic *.heif *.jp2 *.tga)",
         "Video (*.mp4 *.mov *.m4v *.mkv *.webm *.avi *.wmv *.flv *.mpeg *.mpg *.ogv *.3gp)",
+        "Audio (*.mp3 *.wav *.flac *.ogg *.oga *.opus *.aac *.m4a *.wma *.aiff *.aif *.amr *.mid *.midi)",
         "All Files (*)",
     ])
 
@@ -198,10 +282,10 @@ def load_file(path):
 
     fmt = detect_format(p)
 
-    if fmt in IMAGE_FORMATS or fmt in VIDEO_FORMATS:
-        # Images / videos are loaded by their dedicated viewer widget, not
-        # by this function. Return an empty content string so callers can
-        # still set up the status bar / format label etc.
+    if fmt in IMAGE_FORMATS or fmt in MEDIA_FORMATS:
+        # Images / video / audio are loaded by their dedicated viewer
+        # widget, not by this function. Return an empty content string so
+        # callers can still set up the status bar / format label etc.
         return "", "binary", fmt
 
     if fmt in DOCUMENT_FORMATS:

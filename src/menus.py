@@ -49,10 +49,11 @@ def build(w):
     mb = w.menuBar()
 
     m_file = mb.addMenu("&File")
-    _add(m_file, w.action_new_window, w.action_new_tab, w.action_open, w.action_quick_open,
+    _add(m_file, w.action_new_window, w.action_new_tab, w.action_new_from_template,
+         w.action_open, w.action_quick_open,
          w.action_open_url, w.action_open_folder, w.action_save,
          w.action_save_as, w.action_reload, w.action_close_file,
-         w.action_close_all, None)
+         w.action_close_all, w.action_detach_tab, None)
     w.recent.attach_menu(m_file.addMenu("Open recent"))
     m_export = m_file.addMenu("Export")
     _add(m_export, w.action_export_html, w.action_export_pdf,
@@ -73,7 +74,8 @@ def build(w):
          None, w.action_edit_mode, w.action_copy_all)
 
     _add(mb.addMenu("&Run"), w.action_run, w.action_run_selection,
-         w.action_stop_run, None, w.action_toggle_runner,
+         w.action_stop_run, None, w.action_compile_latex, None,
+         w.action_toggle_runner,
          w.action_python_repl, w.action_pick_python, w.action_jupyter_console,
          w.action_notebook_start, w.action_notebook_run_all,
          w.action_notebook_add_code, w.action_notebook_add_md, w.action_notebook_delete,

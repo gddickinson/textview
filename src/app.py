@@ -14,13 +14,17 @@ from .config_panel import ConfigPanel
 from .settings import SettingsManager
 from .file_loader import (
     load_file, file_info, file_dialog_filter, humansize, DOCUMENT_FORMATS,
-    IMAGE_FORMATS, VIDEO_FORMATS,
+    IMAGE_FORMATS, VIDEO_FORMATS, AUDIO_FORMATS, MEDIA_FORMATS,
 )
 from .document_extract import DocumentExtractionError
 from .renderers import apply_pygments, render_markdown_html, escape_to_html
 from .themes import get_theme
 from .pdf_renderer import PdfController
 from .rich_doc_controller import RichDocController, RICH_FORMATS
+from .latex_controller import (
+    LatexController, compile_active_buffer as _latex_compile,
+    apply_compiled_pdf as _latex_apply,
+)
 from .welcome import WELCOME_MARKDOWN
 from . import view_styler
 from .search_bar import SearchBar
@@ -54,6 +58,7 @@ from .inline_suggest import InlineSuggester
 from .actions import build as _build_actions_into
 from .menus import build as _build_menus_into
 from . import editor_actions
+from . import notebook_actions as _na
 
 
 class MainWindow(QMainWindow):
@@ -80,6 +85,9 @@ class MainWindow(QMainWindow):
         self.search_bar = SearchBar(self)
         self.tab_bar = TabBar(self)
         self.tab_bar.requested_open.connect(self._on_tab_open); self.tab_bar.requested_clear.connect(self._show_welcome)
+        from . import tab_actions as _tab_actions
+        self.tab_bar.tab_context_requested.connect(
+            lambda idx, p: _tab_actions.show_tab_context_menu(self, idx, p))
         self.table_filter_bar = TableFilterBar(self); self.table_filter_bar.hide()
         self.table_filter_bar.filter_changed.connect(self._on_table_filter_changed)
 
@@ -109,6 +117,7 @@ class MainWindow(QMainWindow):
         self._table_delimiter = ","
         self.viewer.table_view.selection_summary.connect(self._on_table_selection)
         self._pdf, self._rich = PdfController(), RichDocController()
+        self._latex = LatexController(self); self._latex.finished.connect(self._on_latex_finished)
         self.edit = EditController(self); self.edit.attach(self.viewer); self.edit.state_changed.connect(self._update_title)
         self.web = WebController(self); self.run = RunController(self); self.bookmarks = BookmarksController(self); self.recent = RecentFilesController(self)
         self.images = ImageController(self); self.exp = ExportController(self); self.snippets = SnippetStore()
@@ -213,14 +222,14 @@ class MainWindow(QMainWindow):
 
         self._current_path, self._current_content = path, content
         self._current_format, self._current_encoding = fmt, encoding
-        self._pdf.clear(); self._rich.clear(); self.viewer.video_view.teardown()
+        self._pdf.clear(); self._rich.clear(); self._latex.clear(); self.viewer.video_view.teardown()
         if fmt == "pdf":
             self._pdf.load(path)
         elif fmt in RICH_FORMATS:
             self._rich.load(path, fmt)
         elif fmt in IMAGE_FORMATS:
             self.viewer.image_view.load(path)
-        elif fmt in VIDEO_FORMATS:
+        elif fmt in MEDIA_FORMATS:
             self.viewer.video_view.load(path)
         elif fmt == "csv":
             self._table_source = None; self._load_csv_table(content)
@@ -282,20 +291,15 @@ class MainWindow(QMainWindow):
     def _lsp_hover_for(self, cursor):
         if self._current_path: self.lsp.request_hover(self._current_path, cursor.blockNumber(), cursor.positionInBlock())
 
-    def open_python_repl(self): from .python_envs import open_repl; open_repl(self)
-    def pick_python_interpreter(self): from .python_envs import pick_interpreter; pick_interpreter(self)
-    def open_jupyter_console(self):
-        self.jupyter_dock.show();  self.jupyter_dock.is_running() or self.jupyter_dock.start_with_interpreter(self.settings_manager.display.python_interpreter or sys.executable)
-    def notebook_start_kernel(self): self.viewer.notebook_view.start_kernel(self.settings_manager.display.python_interpreter or sys.executable)
-    def notebook_run_all(self): self.viewer.notebook_view.run_all()
-    def _nb_op(self, fn, *args):
-        nv = self.viewer.notebook_view; cur = nv.current_cell()
-        if fn == "add": nv.add_cell(cur.index if cur else -1, *args)
-        elif cur: getattr(nv, fn)(cur.index, *args)
-    def notebook_add_cell(self, kind): self._nb_op("add", kind)
-    def notebook_delete_current(self): self._nb_op("delete_cell")
-    def notebook_change_type(self, k): self._nb_op("change_cell_type", k)
-    def notebook_move(self, d):        self._nb_op("move_cell", d)
+    def open_python_repl(self):              _na.open_python_repl(self)
+    def pick_python_interpreter(self):        _na.pick_python_interpreter(self)
+    def open_jupyter_console(self):           _na.open_jupyter_console(self)
+    def notebook_start_kernel(self):          _na.notebook_start_kernel(self)
+    def notebook_run_all(self):               _na.notebook_run_all(self)
+    def notebook_add_cell(self, kind):        _na.notebook_add_cell(self, kind)
+    def notebook_delete_current(self):        _na.notebook_delete_current(self)
+    def notebook_change_type(self, k):        _na.notebook_change_type(self, k)
+    def notebook_move(self, d):               _na.notebook_move(self, d)
 
     def _lsp_pos(self):
         c = self.viewer.code.textCursor()
@@ -343,8 +347,12 @@ class MainWindow(QMainWindow):
         if fmt == "web": self.viewer.show_web(); return
         if fmt == "notebook":
             self.viewer.show_notebook(); self.lbl_format.setText("Notebook"); return
-        if fmt in VIDEO_FORMATS:
-            self.viewer.show_video(); self.lbl_format.setText(f"Video · {Path(self._current_path or '').name}"); return
+        if fmt in MEDIA_FORMATS:
+            self.viewer.show_video()
+            label = "Audio" if fmt in AUDIO_FORMATS else "Video"
+            self.lbl_format.setText(
+                f"{label} · {Path(self._current_path or '').name}")
+            return
         if fmt in IMAGE_FORMATS:
             if d.image_checkered_background:
                 self.viewer.image_view.set_checkered(True)
@@ -395,7 +403,13 @@ class MainWindow(QMainWindow):
 
     def on_toggle_render(self):
         d = self.settings_manager.display; theme = get_theme(d.theme); self._sync_content()
-        if self._current_format in IMAGE_FORMATS or self._current_format in VIDEO_FORMATS or self._current_format == "notebook": return  # no source/rendered split
+        if self._current_format in IMAGE_FORMATS or self._current_format in MEDIA_FORMATS or self._current_format == "notebook": return  # no source/rendered split
+        if self._current_format == "latex":
+            if self.viewer.mode() == self.viewer.MODE_PDF and self._pdf.doc:
+                self._populate_code_view(); self.viewer.show_code()
+            else:
+                self.compile_latex()
+            return
         if self._current_format == "pdf" and self._pdf.doc:
             if self.viewer.mode() == self.viewer.MODE_PDF:
                 self._populate_code_view(); self.viewer.show_code()
@@ -429,6 +443,9 @@ class MainWindow(QMainWindow):
         else:
             self.viewer.rendered.setHtml(escape_to_html(self._current_content, theme))
         self.viewer.show_rendered()
+
+    def compile_latex(self): _latex_compile(self)
+    def _on_latex_finished(self, ok, pdf_path, message): _latex_apply(self, ok, pdf_path, message)
 
     def _zoom(self, direction):
         m, v = self.viewer.mode(), self.viewer

@@ -13,12 +13,14 @@ Supported codecs depend on what the host's Qt build can decode (Qt 6.5+
 uses FFmpeg by default, so most common formats work; on older Mac builds
 it falls back to AVFoundation).
 """
+from pathlib import Path
+
 from PyQt6.QtCore import Qt, QUrl, pyqtSignal
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSlider, QLabel,
-    QSizePolicy,
+    QSizePolicy, QStackedWidget,
 )
 
 
@@ -48,11 +50,33 @@ class VideoView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.surface = QVideoWidget(self)
-        self.surface.setSizePolicy(QSizePolicy.Policy.Expanding,
-                                   QSizePolicy.Policy.Expanding)
+        # Stacked area: the video surface for movies, a "now playing" label
+        # for audio-only files. `set_audio_mode(True, name)` flips to the
+        # label so .mp3 / .flac etc. don't render as a giant black box.
+        self._stack = QStackedWidget(self)
+        self._stack.setSizePolicy(QSizePolicy.Policy.Expanding,
+                                  QSizePolicy.Policy.Expanding)
+        self.surface = QVideoWidget(self._stack)
         self.surface.setStyleSheet("background:#000;")
-        layout.addWidget(self.surface, 1)
+        self._audio_panel = QWidget(self._stack)
+        self._audio_panel.setStyleSheet(
+            "background:#1e1e1e; color:#eee; font-size:14pt;")
+        ap_layout = QVBoxLayout(self._audio_panel)
+        ap_layout.setContentsMargins(40, 40, 40, 40); ap_layout.setSpacing(12)
+        self._audio_icon = QLabel("♪", self._audio_panel)
+        self._audio_icon.setStyleSheet("font-size:80pt; color:#888;")
+        self._audio_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._audio_name = QLabel("(no audio loaded)", self._audio_panel)
+        self._audio_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._audio_name.setWordWrap(True)
+        ap_layout.addStretch(1)
+        ap_layout.addWidget(self._audio_icon, 0)
+        ap_layout.addWidget(self._audio_name, 0)
+        ap_layout.addStretch(1)
+        self._stack.addWidget(self.surface)
+        self._stack.addWidget(self._audio_panel)
+        layout.addWidget(self._stack, 1)
+        self._audio_mode = False
 
         # Transport bar.
         bar = QWidget(self)
@@ -120,11 +144,25 @@ class VideoView(QWidget):
     def load(self, path: str) -> bool:
         self._ensure_player()
         try:
+            from .file_loader import is_audio
+            self.set_audio_mode(is_audio(path), Path(path).name)
             self.player.setSource(QUrl.fromLocalFile(str(path)))
             return True
         except Exception as e:
             self.errored.emit(str(e))
             return False
+
+    def set_audio_mode(self, on: bool, display_name: str = ""):
+        """Flip between the video surface and the audio-only label panel.
+
+        Called from `load()` based on the file's detected format, but exposed
+        publicly so callers can force-set it (e.g. when reloading a file
+        without a fresh load).
+        """
+        self._audio_mode = bool(on)
+        self._stack.setCurrentWidget(self._audio_panel if on else self.surface)
+        if on:
+            self._audio_name.setText(display_name or "")
 
     def play(self):
         if self.player is not None: self.player.play()

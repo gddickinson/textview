@@ -1,5 +1,195 @@
 # SESSION_LOG.md
 
+## 2026-05-25 — Audit + close the create / save / detect gaps
+
+After adding LaTeX support, audited every step of the file lifecycle
+(open / create / save / detect-after-save) for missing pieces. Built
+four interlocking pieces in one pass.
+
+### 1. Format detection — ~40 new extensions + by-name lookups
+
+`file_loader.FORMAT_MAP` and `FILENAME_MAP` extended. Categories:
+
+- **Audio** (`.mp3`, `.wav`, `.flac`, `.ogg`/`.oga`, `.opus`, `.aac`,
+  `.m4a`, `.wma`, `.aiff`/`.aif`, `.amr`, `.mid`/`.midi`).
+- **Subtitles** (`.srt`, `.vtt`, `.ass`, `.ssa`).
+- **Email / calendar / contacts** (`.eml`, `.mbox`, `.ics`, `.vcs`, `.vcf`).
+- **Markup / alt-docs** (`.adoc`/`.asciidoc`, `.org`, `.typ` (Typst),
+  `.bib` (BibTeX), `.mediawiki`/`.wiki`, `.textile`, `.pod`).
+- **DevOps / IaC** (`.tf`/`.tfvars`, `.hcl`, `.nix`, `.proto`, `.capnp`,
+  `.graphql`/`.gql`, `.prisma`, `.env`, `.editorconfig`).
+- **Newline-delimited JSON** (`.ndjson`, `.jsonl`, `.geojson`).
+- **Lisp family** (`.rkt`, `.scm`/`.ss`, `.lisp`/`.lsp`/`.cl`, `.el`).
+- **More languages** (`.tcl`, `.awk`, `.gnuplot`/`.gp`, `.lean`, `.idr`,
+  `.ada`/`.adb`/`.ads`, `.pas`/`.pp`, `.m` (MATLAB), `.nb`/`.wl`/`.wls`
+  (Mathematica), `.sas`, `.do` (Stata)).
+- **By-name** dotfiles + lockfiles (`.gitignore`, `.gitattributes`,
+  `.dockerignore`, `.editorconfig`, `.env`, `.npmrc`/`.yarnrc`,
+  `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `Cargo.lock`,
+  `poetry.lock`, `Pipfile.lock`, `composer.lock`, `Gemfile.lock`,
+  `go.mod`/`go.sum`).
+
+Introduced `AUDIO_FORMATS` and `MEDIA_FORMATS = VIDEO_FORMATS | AUDIO_FORMATS`;
+helpers `is_audio()` / `is_media()`. Pygments lexer-availability is
+verified by `tests/test_languages.py::test_pygments_can_resolve_every_format`.
+
+### 2. Audio playback through the existing transport bar
+
+Audio extensions route through `VideoView` (same `QMediaPlayer` engine
+that handles video). `VideoView` grew a `QStackedWidget` between the
+video surface and a new "♪ filename" audio-only panel so an `.mp3`
+doesn't render as a giant black box. `set_audio_mode(on, name)` is
+called automatically from `VideoView.load()` based on the detected
+format. The seek / play / volume / mute / time labels all work
+unchanged.
+
+### 3. Templates — `File → New from template…` (Ctrl+Alt+N)
+
+Two new modules:
+
+- `src/templates.py` — pure-data registry of ~25 `Template`s grouped
+  into **Prose / docs** (README, CHANGELOG, LaTeX article, HTML5),
+  **Data** (JSON / YAML / TOML / CSV / JSONL), **Code** (Python script,
+  pytest module, JS / TS / Bash / Rust / Go), **DevOps** (Dockerfile,
+  .gitignore, GitHub Actions, .editorconfig), **Notebooks** (empty
+  .ipynb). Each template names its `format`, default `extension`,
+  starting `body`, and one-line `description`.
+- `src/templates_dialog.py` — modal launcher. Categorised list +
+  live preview; **Create as untitled** loads the body into an unsaved
+  buffer and drops the editor into edit mode, **Save to file…** prompts
+  for a path, writes the body, then runs through `MainWindow.open_file`
+  so format detection / view mode / syntax highlighting are right from
+  the first paint.
+
+Wired as `w.action_new_from_template` (Ctrl+Alt+N), added to the **File**
+menu after "New tab".
+
+### 4. Save As with format conversion + re-detection
+
+New `src/save_as.py` registry of `Conversion(id, from_format,
+to_extension, to_format, description, convert, requires)`. The
+`convert` callback returns `str` (text) or `bytes` (binary), so
+`.xlsx` works alongside `.html`/`.md`. Built-in pairs:
+
+- **Markdown ↔ HTML** (markdown lib for forward; markdownify or a tag
+  stripper fallback for reverse).
+- **JSON / YAML / TOML** all six cross-conversions (each gated on its
+  required library — pyyaml / tomli_w; the read side uses stdlib
+  `tomllib`).
+- **CSV → JSON, JSONL, XLSX, Markdown table, HTML table.**
+- **JSON (array of objects) → CSV.**
+- **RTF → plain text.**
+
+Missing third-party deps silently filter the converter out via
+`available_conversions()` rather than raising. `EditController.save_as`
+now delegates to `show_save_as_with_conversion(window)` — prompts for
+a destination, looks up `find_conversion(src_format, target_ext)`,
+asks Yes / No / Cancel, writes converted output or the raw buffer, then
+**re-opens the file via `MainWindow.open_file`** so view mode /
+highlighting / edit state all reflect the new on-disk format.
+
+### Tests + docs
+
+- `tests/test_languages.py` extended with `.tex`/`.latex`/`.ltx` plus
+  every new extension's expected format; the audio format is added to
+  the lexer-skip set.
+- `tests/test_templates_and_audio.py` — registry sanity (unique ids,
+  real Pygments-resolvable formats, trailing newlines), audio
+  extension routing, the new by-name dotfile / lockfile lookups.
+- `tests/test_save_as.py` — registry shape, `find_conversion`
+  lookup, optional-dep filtering, plus round-trip tests for every
+  converter (those needing `pyyaml`/`tomli_w`/`openpyxl` are
+  `pytest.skip`-gated so the suite stays green on a bare host).
+- `INTERFACE.md` updated with the four new modules and the expanded
+  supported-formats list, plus a new section documenting Save-As-time
+  conversions.
+
+Full suite: **529 passing, 3 skipped, 10 deselected** (was 486 before
+LaTeX, 494 after LaTeX). All deltas isolated to new files + thin edits
+to existing ones — no file exceeds the 500-line cap.
+
+## 2026-05-25 — LaTeX support (`.tex` / `.latex` / `.ltx`)
+
+Added end-to-end LaTeX handling. `.tex` files now load as plain text with
+Pygments `latex` syntax highlighting, are editable like any code file, and
+can be compiled to PDF on demand.
+
+- `file_loader.FORMAT_MAP` learns `.tex` / `.latex` / `.ltx` → `latex`;
+  added to `file_dialog_filter()` and `supported_extensions()`.
+- New `src/latex_controller.py` (`LatexController`) — runs the compile via
+  `QProcess` so the UI stays responsive. Engine probe order is
+  `latexmk → pdflatex → xelatex → lualatex` with `pick_engine(preferred)`
+  and `available_engines()` helpers. Sources + adjacent assets (`.bib`,
+  `.cls`, `.sty`, images, with size and count caps) are copied into a
+  per-compile temp build directory so `\input` / `\includegraphics`
+  resolve and the user's folder isn't polluted with aux files. Emits
+  `finished(ok, pdf_path, message)`; failure messages include a tail of
+  the engine log around the first `!` / file:line error marker.
+- `MainWindow` wires the controller: `Ctrl+T` (toggle render) and the new
+  `F6` / **Run → Compile LaTeX → PDF** action save any pending edits,
+  invoke the compiler, and on success load the resulting PDF through the
+  existing `PdfController` (page mode / zoom / search all work for free).
+- Tests: `tests/test_latex_controller.py` covers engine-discovery edge
+  cases, dispatch failure when no engine is installed, and a `slow`-tagged
+  live compile round-trip. `tests/test_languages.py` gains the three
+  extensions.
+- INTERFACE.md updated with the new module and the supported-formats list
+  picks up the LaTeX entry.
+- `.gitignore` excludes the personal CV sample (`sample_files/george_dickinson_CV_Anthropic.tex`).
+
+## 2026-05-19 — Undock/redock tabs + skip re-scan after security clear
+
+Two related UX papercuts addressed.
+
+### Tabs can now move between windows
+
+Previously each `MainWindow` owned its tabs and the only way to put a
+file in its own window was `Ctrl+Shift+N` + reopen. Right-clicking a
+tab now opens a context menu:
+
+- **Close** / **Close other tabs** — convenience.
+- **Detach to new window** — spawns a fresh `MainWindow`, opens the
+  file there, removes the tab from the source.
+- **Move to window → …** — submenu lists all other visible
+  `MainWindow` instances, transfers the tab to the chosen one.
+
+Also keyboard-bound: **Ctrl+Shift+T** detaches the current tab.
+
+Implementation: new `src/tab_actions.py` (~95 lines) holds the
+detach/move logic. `tabs.TabBar` gained a `tab_context_requested(idx,
+QPoint)` signal; `MainWindow` wires it to
+`tab_actions.show_tab_context_menu`. `confirm_discard` only fires when
+the tab being moved is the active dirty buffer — moving inactive tabs
+is silent (no unsaved-state at risk).
+
+The detached window is the "redock" path too: right-click in the
+detached window's tab → Move to → main window.
+
+### Security: don't re-prompt after the user clears a file
+
+User report: switching back to a previously-opened tab kept triggering
+the security scan + Open Anyway dialog. Added a process-local
+`_CLEARED` set in `security_dialog.py`, keyed on `(path, size,
+mtime_ns)`. Once `evaluate_open` returns `"open"` (either the scan was
+clean or the user clicked "Open anyway"), the signature is cached.
+Subsequent calls with the same signature short-circuit. Editing the
+file on disk changes mtime/size and forces a fresh scan, so the
+optimization can't mask a swap.
+
+### Files touched
+
+- `src/tabs.py` — `tab_context_requested` signal, custom context menu policy.
+- `src/tab_actions.py` — new.
+- `src/app.py` — wire `tab_context_requested` to the helper.
+- `src/actions.py` — `action_detach_tab` (Ctrl+Shift+T).
+- `src/menus.py` — show detach action in File menu.
+- `src/security_dialog.py` — `_CLEARED` cache + `clear_security_cache()`.
+- `tests/test_tab_actions.py` — 11 new tests (logic-level; stubs avoid
+  spinning up multiple real MainWindows).
+- `INTERFACE.md` — updated tabs/security entries; added tab_actions row.
+
+Test count: 475 → 486 passing.
+
 ## 2026-05-05 — Silent-overwrite audit + fixes
 
 User asked to verify nothing modifies user files without confirmation.
