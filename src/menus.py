@@ -116,6 +116,13 @@ def build(w):
          w.action_pdf_annot_circle, None,
          w.action_pdf_annot_list, w.action_pdf_annot_del_one,
          w.action_pdf_annot_clear)
+    # Mouse-driven annotation mode (v3.5 phase 2b).
+    m_modes = m_pdf.addMenu("Annotate mode (mouse)")
+    _add(m_modes, w.action_pdf_mode_sticky, w.action_pdf_mode_freetext,
+         w.action_pdf_mode_highlight, w.action_pdf_mode_underline,
+         w.action_pdf_mode_strikeout, None,
+         w.action_pdf_mode_rect, w.action_pdf_mode_circle, None,
+         w.action_pdf_mode_off)
 
     m_table = mb.addMenu("&Table")
     # Ctrl+T (action_toggle_render) is the universal "toggle render" — for CSV

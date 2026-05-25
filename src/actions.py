@@ -91,6 +91,16 @@ def build(w):
     w.action_pdf_annot_list    = mk("Annotations: list…",          lambda: _pdf.show_annotations_dialog(w))
     w.action_pdf_annot_del_one = mk("Annotations: delete one…",    lambda: _pdf.delete_annotation_dialog(w))
     w.action_pdf_annot_clear   = mk("Annotations: clear all…",     lambda: _pdf.clear_annotations_action(w))
+    # Mouse-driven annotation mode (v3.5 phase 2b) — drag on the
+    # rendered page; Esc cancels.
+    w.action_pdf_mode_sticky    = mk("Annotate mode: sticky note (click)",  lambda: _pdf.enter_annotation_mode(w, "sticky"))
+    w.action_pdf_mode_freetext  = mk("Annotate mode: free-text (drag)",     lambda: _pdf.enter_annotation_mode(w, "freetext"))
+    w.action_pdf_mode_highlight = mk("Annotate mode: highlight (drag)",     lambda: _pdf.enter_annotation_mode(w, "highlight"))
+    w.action_pdf_mode_underline = mk("Annotate mode: underline (drag)",     lambda: _pdf.enter_annotation_mode(w, "underline"))
+    w.action_pdf_mode_strikeout = mk("Annotate mode: strikeout (drag)",     lambda: _pdf.enter_annotation_mode(w, "strikeout"))
+    w.action_pdf_mode_rect      = mk("Annotate mode: rectangle (drag)",     lambda: _pdf.enter_annotation_mode(w, "rect"))
+    w.action_pdf_mode_circle    = mk("Annotate mode: circle (drag)",        lambda: _pdf.enter_annotation_mode(w, "circle"))
+    w.action_pdf_mode_off       = mk("Annotate mode: off",                  lambda: w.viewer.pdf_view.set_annotation_mode("off"))
     from .archive_loader import (
         show_extract_member_picker as _arc_pick,
         show_extract_all as _arc_all,

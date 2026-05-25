@@ -218,7 +218,7 @@ ecosystem was surveyed and the scope split into three tiers.
 | --- | --- | --- |
 | 1 | Page operations: rotate / delete / extract / reorder / merge / insert blank | ✅ *(shipped 2026-05-25)* |
 | 2a | Annotations (dialog-driven): sticky note / free-text / highlight / rectangle / circle / ink + list / delete / clear-all | ✅ *(shipped 2026-05-25)* |
-| 2b | Annotation **mouse-driven UX** — annotation mode toggle in QPdfView, click/drag to position, color picker, reuses 2a's backend | 📅 |
+| 2b | Annotation **mouse-driven UX** — click / drag on the rendered page, QRubberBand feedback, coord conversion to PDF points, Esc cancels | ✅ *(shipped 2026-05-25)* |
 | 3 | Inline text editing | 🤔 *(no Python library handles this reliably; deferred indefinitely)* |
 | — | Cryptographic signing (via endesive + OpenSSL) | 🤔 |
 

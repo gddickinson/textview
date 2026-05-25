@@ -118,6 +118,10 @@ class MainWindow(QMainWindow):
         self.viewer.table_view.selection_summary.connect(self._on_table_selection)
         self._pdf, self._rich = PdfController(), RichDocController()
         self._latex = LatexController(self); self._latex.finished.connect(self._on_latex_finished)
+        # PDF annotation mode (v3.5 phase 2b) — connects pdf_view's
+        # annotation_committed signal to the writer + status-bar.
+        from . import pdf_actions as _pdf_actions
+        _pdf_actions.attach_annotation_signals(self)
         self.edit = EditController(self); self.edit.attach(self.viewer); self.edit.state_changed.connect(self._update_title)
         self.web = WebController(self); self.run = RunController(self); self.bookmarks = BookmarksController(self); self.recent = RecentFilesController(self)
         self.images = ImageController(self); self.exp = ExportController(self); self.snippets = SnippetStore()

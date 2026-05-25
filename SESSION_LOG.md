@@ -1,5 +1,102 @@
 # SESSION_LOG.md
 
+## 2026-05-25 — v3.5 phase 2b: mouse-driven annotation UX
+
+Annotation mouse-driven UX shipped on top of the 2a backend. The
+user enters a mode via the new **PDF → Annotate mode (mouse)**
+submenu, clicks / drags on the rendered page, and the annotation
+goes straight into a sibling `*-edited.pdf`.
+
+### `PdfViewer` — annotation state + mouse handlers (~230 new lines)
+
+- `set_annotation_mode(mode, color)` arms the viewer for one of
+  `sticky` (click) / `freetext`/`highlight`/`underline`/`strikeout`/
+  `rect`/`circle` (drag). `"off"` cancels and restores cursor.
+- `annotation_mode_changed` (signal) — host updates the status bar.
+- `annotation_committed(mode, page, rect_pdf, color)` (signal) —
+  fires once when a drag completes. `rect_pdf` is `(x, y, w, h)` in
+  PDF points (top-left origin, MuPDF convention); click-only modes
+  emit a 1×1 rect at the click point.
+- `_viewport_to_pdf(pt)` does the pixel → PDF-points conversion
+  (`(viewport + scroll) / zoom`); returns `(page_index, x, y)` or
+  `None` if outside the current page.
+- `_normalize_rect_px` — pure helper, drag direction-agnostic.
+- `QRubberBand` shows live visual feedback during the drag.
+- `keyPressEvent` traps `Esc` to cancel.
+
+**Edge cases rejected with informative messages**:
+
+- Tiny drag (< 1 PDF point in width or height) → "drag too small".
+- Click outside any page → "click was outside the page".
+- Drag spanning two pages → "drag spanned two pages — cancelled".
+
+These route through `annotation_mode_changed` rather than emitting
+`annotation_committed`, so the bridge writer never sees malformed
+input.
+
+### Bridge — `pdf_annotation_actions.py`
+
+- `attach_annotation_signals(window)` — wires both signals to the
+  bridge handlers; invoked once during `MainWindow.__init__`.
+- `enter_annotation_mode(window, mode)` — auto-switches to
+  single-page render mode (the coord math assumes single-page
+  layout), then arms `PdfViewer`. Status-bar message instructs the
+  user (`"… click on the page, Esc to cancel"` or `"… drag on the
+  page, Esc to cancel"`).
+- `_on_annotation_committed(window, mode, page, rect, color)` —
+  prompts for text (sticky / freetext), writes via the appropriate
+  `pdf_annotations.add_*` function to `derive_output_path`, opens
+  the result in a new tab.
+
+### Menu
+
+A new **PDF → Annotate mode (mouse)** submenu sits alongside the
+existing **PDF → Annotations** dialog submenu. No keyboard
+shortcuts — these are infrequent modal flows.
+
+### Refactor: `pdf_actions.py` was over the 500-line cap
+
+After phase 2a stacked annotation handlers on top of page-edit
+handlers, `pdf_actions.py` hit 549 lines. Split out
+`pdf_annotation_actions.py` (355 lines) housing every
+annotation-related action; `pdf_actions.py` (216 lines) keeps the
+page-edit handlers + the shared MainWindow helpers
+(`_require_pdf` / `_current_page` / `_page_count` /
+`_suggest_output` / `_finish`). `pdf_actions.py` re-exports every
+annotation handler under its old name so any caller importing from
+`pdf_actions` keeps working — only the actions / menus files
+needed to add the new mode-entry actions.
+
+### Tests
+
+**18 new tests in `test_pdf_annotation_mode.py`** covering:
+
+- `_normalize_rect_px` for both drag directions + zero-size.
+- Mode taxonomy (POINT_MODES / RECT_MODES / ALL_MODES disjoint).
+- State machine: starts off, arms on `set_annotation_mode`, resets
+  on "off", raises on unknown mode.
+- `annotation_mode_changed` signal fires on every transition.
+- `_viewport_to_pdf` returns None when no document is loaded.
+- **Synthetic end-to-end drag** with `_viewport_to_pdf`
+  monkeypatched to bypass needing a real `QPdfDocument`: confirms
+  press → move → release fires `annotation_committed` exactly once
+  with the right `(mode, page, rect, color)` payload.
+- Reverse-direction drag yields a normalised PDF rect (top-left
+  origin).
+- Click in a point mode emits `(mode, page, (x, y, 1.0, 1.0), color)`.
+- Tiny drag, click outside page, cross-page drag → no signal, but
+  the informational message is routed through `mode_changed`.
+- Mode off → handlers return False so base class (link / text
+  selection) gets to run.
+
+End-to-end smoke verified through `MainWindow`: emit
+`annotation_committed("highlight", 0, (100, 100, 200, 100), "#FFFF00")`
+synthetically → handler writes `test-edited.pdf` with a Highlight
+annotation, MainWindow reopens the result, `list_annotations`
+confirms `Highlight` on page 1.
+
+### Full suite: 738 → 756 passing.
+
 ## 2026-05-25 — v3.5 phase 2a: PDF annotations (dialog-driven)
 
 Shipped the annotation substrate. Phase 2b (mouse-driven annotation
