@@ -122,6 +122,10 @@ class MainWindow(QMainWindow):
         # annotation_committed signal to the writer + status-bar.
         from . import pdf_actions as _pdf_actions
         _pdf_actions.attach_annotation_signals(self)
+        # PDF inline text editing (v3.5 tier 3) — hooks the same
+        # signal for the `edit_text` mode.
+        from . import pdf_text_edit_actions as _pdf_text_actions
+        _pdf_text_actions.attach_text_edit_signals(self)
         self.edit = EditController(self); self.edit.attach(self.viewer); self.edit.state_changed.connect(self._update_title)
         self.web = WebController(self); self.run = RunController(self); self.bookmarks = BookmarksController(self); self.recent = RecentFilesController(self)
         self.images = ImageController(self); self.exp = ExportController(self); self.snippets = SnippetStore()

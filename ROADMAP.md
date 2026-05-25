@@ -219,7 +219,7 @@ ecosystem was surveyed and the scope split into three tiers.
 | 1 | Page operations: rotate / delete / extract / reorder / merge / insert blank | ✅ *(shipped 2026-05-25)* |
 | 2a | Annotations (dialog-driven): sticky note / free-text / highlight / rectangle / circle / ink + list / delete / clear-all | ✅ *(shipped 2026-05-25)* |
 | 2b | Annotation **mouse-driven UX** — click / drag on the rendered page, QRubberBand feedback, coord conversion to PDF points, Esc cancels | ✅ *(shipped 2026-05-25)* |
-| 3 | Inline text editing | 🤔 *(no Python library handles this reliably; deferred indefinitely)* |
+| 3 | Inline text editing (span replacement + find-and-replace + click-to-edit) | ✅ *(shipped 2026-05-25)* |
 | — | Cryptographic signing (via endesive + OpenSSL) | 🤔 |
 
 Tier 1 (`src/pdf_editor.py` + `src/pdf_actions.py`) uses `pypdf`

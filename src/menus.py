@@ -109,7 +109,9 @@ def build(w):
          w.action_pdf_delete_page, w.action_pdf_extract,
          w.action_pdf_reorder, None,
          w.action_pdf_insert_after, w.action_pdf_insert_start, None,
-         w.action_pdf_merge, None)
+         w.action_pdf_merge, w.action_pdf_split, None,
+         w.action_pdf_edit_text, w.action_pdf_find_replace,
+         w.action_pdf_edit_text_mouse, None)
     m_annot = m_pdf.addMenu("Annotations")
     _add(m_annot, w.action_pdf_annot_sticky, w.action_pdf_annot_text,
          w.action_pdf_annot_hl, w.action_pdf_annot_rect,

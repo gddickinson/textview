@@ -24,7 +24,7 @@ from PyQt6.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 from .pdf_editor import (
     PdfEditError, parse_page_range, derive_output_path,
     rotate_pages, delete_pages, extract_pages,
-    merge_pdfs, insert_blank_page,
+    merge_pdfs, insert_blank_page, split_pdf,
 )
 
 
@@ -170,6 +170,66 @@ def insert_blank_at_start(window) -> None:
         _handle_edit_error(window, e); return
     _finish(window, out,
             f"Inserted blank at start ({n} pages) → {Path(out).name}")
+
+
+def split_pdf_dialog(window) -> None:
+    """**PDF → Split into multiple PDFs…** — prompt for split mode +
+    target directory, then write one PDF per chunk."""
+    if not _require_pdf(window): return
+    total = _page_count(window)
+    if total <= 1:
+        window.statusBar().showMessage(
+            "Need at least 2 pages to split.", 5000); return
+    # Mode picker.
+    modes = [
+        "Every page → one file each",
+        "Every N pages",
+        "At specific page boundaries (e.g. '5, 10, 15')",
+    ]
+    chosen, ok = QInputDialog.getItem(
+        window, "Split PDF",
+        f"How should this {total}-page PDF be split?",
+        modes, 0, False)
+    if not ok: return
+    kwargs: dict = {}
+    if chosen == modes[1]:
+        n, ok = QInputDialog.getInt(
+            window, "Split every N pages",
+            f"Pages per output (1..{total}):", value=10, min=1, max=total)
+        if not ok: return
+        kwargs.update(mode="every_n", every_n=n)
+    elif chosen == modes[2]:
+        spec, ok = QInputDialog.getText(
+            window, "Split at boundaries",
+            f"Page numbers to split BEFORE (1-based, comma-separated). "
+            f"E.g. '5, 10, 15' on a {total}-page doc.")
+        if not ok or not spec.strip(): return
+        try:
+            # 1-based input → 0-based boundary indices.
+            bds = [int(s.strip()) - 1 for s in spec.split(",") if s.strip()]
+        except ValueError:
+            QMessageBox.warning(window, "Bad boundaries",
+                                "Could not parse comma-separated numbers.")
+            return
+        kwargs.update(mode="boundaries", boundaries=bds)
+    else:
+        kwargs.update(mode="every_page")
+
+    out_dir, _ = (Path(window._current_path).parent /
+                  f"{Path(window._current_path).stem}-split"), None
+    out_dir = QFileDialog.getExistingDirectory(
+        window, "Output directory for split PDFs",
+        str(Path(window._current_path).parent))
+    if not out_dir: return
+    try:
+        paths = split_pdf(window._current_path, out_dir, **kwargs)
+    except PdfEditError as e:
+        _handle_edit_error(window, e); return
+    window.statusBar().showMessage(
+        f"Split into {len(paths)} files in {Path(out_dir).name}/", 6000)
+    if paths:
+        # Open the first piece so the user can verify.
+        window.open_file(paths[0], confirm=False)
 
 
 def reorder_pages_dialog(window) -> None:

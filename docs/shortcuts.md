@@ -77,6 +77,10 @@ canonical reference.
 | (menu) | Rotate 180° / Delete current / Extract pages… / Reorder / Insert blank / Merge with PDFs… |
 | (menu) | **PDF → Annotations**: sticky note / free-text / highlight rect / rectangle / circle / list / delete one / clear all |
 | (menu) | **PDF → Annotate mode (mouse)**: click/drag on the rendered page; Esc cancels. Auto-switches to single-page render mode. |
+| (menu) | **PDF → Edit text: pick a span on this page…** — list editable spans, pick one, type replacement |
+| (menu) | **PDF → Edit text: find and replace…** — query + replacement across the whole document |
+| (menu) | **PDF → Edit text: click a span (mouse mode)** — click a text span on the rendered page |
+| (menu) | **PDF → Split into multiple PDFs…** — split every page / every N pages / at boundaries |
 
 All operations write to a sibling `*-edited.pdf` next to the source.
 The original file is never modified. Annotations need PyMuPDF

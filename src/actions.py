@@ -101,6 +101,13 @@ def build(w):
     w.action_pdf_mode_rect      = mk("Annotate mode: rectangle (drag)",     lambda: _pdf.enter_annotation_mode(w, "rect"))
     w.action_pdf_mode_circle    = mk("Annotate mode: circle (drag)",        lambda: _pdf.enter_annotation_mode(w, "circle"))
     w.action_pdf_mode_off       = mk("Annotate mode: off",                  lambda: w.viewer.pdf_view.set_annotation_mode("off"))
+    # Inline text editing (v3.5 tier 3)
+    from . import pdf_text_edit_actions as _pdftxt
+    w.action_pdf_edit_text       = mk("Edit text: pick a span on this page…", lambda: _pdftxt.edit_text_dialog(w))
+    w.action_pdf_find_replace    = mk("Edit text: find and replace…",         lambda: _pdftxt.find_replace_dialog(w))
+    w.action_pdf_edit_text_mouse = mk("Edit text: click a span (mouse mode)", lambda: _pdftxt.enter_edit_text_mode(w))
+    # Splitting (extends v3.5 phase 1 page operations)
+    w.action_pdf_split           = mk("Split into multiple PDFs…",            lambda: _pdf.split_pdf_dialog(w))
     from .archive_loader import (
         show_extract_member_picker as _arc_pick,
         show_extract_all as _arc_all,

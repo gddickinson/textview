@@ -1,5 +1,123 @@
 # SESSION_LOG.md
 
+## 2026-05-25 — v3.5 tier 3: inline PDF text editing + split
+
+After the user asked me to investigate inline text editing, I ran
+four experiments against PyMuPDF's redaction-with-replacement
+primitive (`page.add_redact_annot(rect, text=…, fontname=…)` +
+`page.apply_redactions()`). Confirmed it works for the common cases,
+identified the limitations, then shipped a tier-3 implementation
+with the limitations called out clearly in docs and dialogs.
+
+### `pdf_text_edit.py` — library (359 lines)
+
+- `TextSpan` dataclass — id, page, bbox, text, font, size, color
+  (packed int, with `color_hex()` accessor).
+- `list_text_spans(path)` walks `page.get_text("dict")` across every
+  page, returning sequential ids. Skips whitespace-only spans.
+- `find_span_at(path, page, x, y)` hit-tests a PDF-points point
+  against the per-span bboxes — used by the click-to-edit mouse mode.
+- `replace_span(in, out, page, bbox, new_text, fontname=…,
+  fontsize=…, text_color=…, fill=…)` is the core: calls
+  `add_redact_annot` then `apply_redactions`. `fontsize=None`
+  enables PyMuPDF's auto-shrink-to-fit (the default); pass an
+  explicit value to keep the original size and accept clipping.
+- `replace_span_object(in, out, span, new_text)` is the friendly
+  wrapper that copies the span's font / size / colour by default,
+  with selective overrides.
+- `find_and_replace(in, out, query, new_text)` searches across every
+  page and replaces each hit. Returns `FindReplaceResult(total,
+  replacements_per_page)`.
+- Every operation funnels failure through `PdfTextEditError` —
+  the caller never imports `fitz` directly.
+
+### Limitations (called out in module docstring + dialogs)
+
+- **Long replacements auto-shrink** to fit the original bbox.
+- **No reflow** — surrounding text doesn't shift when the
+  replacement is shorter / longer.
+- **No cross-line edits** — a span is one line of text; edits that
+  span line breaks aren't supported.
+- **Unicode characters outside the original font** render as `?`
+  (the base 14 PDF fonts have limited coverage).
+- **Image-only or glyph-path PDFs** return zero spans —
+  `edit_text_dialog` surfaces a friendly message pointing the user
+  at the OCR workflow.
+
+### `pdf_text_edit_actions.py` — handlers (185 lines)
+
+Three flavours, all converging on `replace_span_object` /
+`find_and_replace`:
+
+1. **`edit_text_dialog`** — list editable spans on the current page
+   in a picker; user picks one and types replacement.
+2. **`find_replace_dialog`** — query + new text + case option;
+   operates across the doc; surfaces match counts via
+   `FindReplaceResult`.
+3. **Mouse-driven** — `enter_edit_text_mode` adds an `"edit_text"`
+   click mode to the existing PdfViewer annotation taxonomy.
+   `attach_text_edit_signals` wires the existing
+   `annotation_committed` signal to `_on_edit_text_click`, which
+   calls `find_span_at` and (if a span was clicked) opens the
+   replacement dialog at that span. Reuses every coord-conversion
+   and rubber-band asset from phase 2b.
+
+### `PdfViewer.POINT_MODES` extended
+
+Added `"edit_text"` to `POINT_MODES` so `set_annotation_mode` accepts
+it. No new state in the viewer — the bridge handles the dispatch
+based on the `mode` arg in the existing signal payload.
+
+### PDF splitting (extends v3.5 phase 1)
+
+User asked "while you are at it can you add combining and splitting
+pdf files". Combining was already shipped as `merge_pdfs` /
+`merge_with_dialog` in phase 1. Splitting was the gap.
+
+Added `split_pdf(in, out_dir, mode=..., every_n=..., boundaries=...,
+filename_template=...)` to `pdf_editor.py`. Three modes:
+- `"every_page"` (default) — one output per page
+- `"every_n"` — chunks of N pages
+- `"boundaries"` — split before each 0-based page index in
+  `boundaries=[…]`
+
+`derive_output_path_in(directory, filename)` dedupes per-output
+(`doc.pdf` → `doc-2.pdf` if taken) so re-runs never clobber.
+
+`split_pdf_dialog` is the handler: mode picker → mode-specific
+prompt → `QFileDialog.getExistingDirectory` for output → split →
+opens the first resulting file in a new tab.
+
+### Tests
+
+- **`tests/test_pdf_text_edit.py`** — 29 tests covering colour
+  helpers, span listing (empty / single / multi / multi-page,
+  sequential ids, whitespace-skip), hit testing (inside / outside /
+  wrong page), single-span replacement (basic, font preservation,
+  colour, error paths for bad page / bad bbox / empty text / bad
+  colour), `replace_span_object` (preserves attrs, overrides),
+  `find_and_replace` (single page / multi page / no match / empty
+  query / empty replacement / missing file).
+- **`tests/test_pdf_editor.py`** — 13 new tests for `split_pdf`:
+  every_page, every_n (3 + 2 + 1 chunks), boundaries (sorted /
+  unsorted input), out-of-range boundary, empty boundaries, unknown
+  mode, custom filename template, dedupe on re-run, missing input.
+
+End-to-end smoke verified through MainWindow: opened a 2-page PDF
+with real text, listed 3 spans, replaced "The quick brown fox" →
+"The slow gray cat", find+replace "lazy" → "happy" hit on both
+pages, split into 2 single-page outputs.
+
+### Full suite: 756 → 798 passing.
+
+### Menu
+
+A new section in **PDF** menu groups text-editing actions:
+- Edit text: pick a span on this page…
+- Edit text: find and replace…
+- Edit text: click a span (mouse mode)
+- Split into multiple PDFs…
+
 ## 2026-05-25 — v3.5 phase 2b: mouse-driven annotation UX
 
 Annotation mouse-driven UX shipped on top of the 2a backend. The

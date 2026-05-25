@@ -236,6 +236,100 @@ def merge_pdfs(input_paths: list[str], output_path: str) -> int:
     return len(writer.pages)
 
 
+def split_pdf(input_path: str, output_dir: str,
+               *,
+               mode: str = "every_page",
+               every_n: int = 1,
+               boundaries: list[int] | None = None,
+               filename_template: str = "{stem}-part-{idx:02d}{ext}") -> list[str]:
+    """Split one PDF into multiple sibling PDFs.
+
+    Modes:
+      - ``"every_page"`` (default) — one output per page.
+      - ``"every_n"`` — every `every_n` pages becomes one output.
+      - ``"boundaries"`` — split BEFORE each 0-based index in
+        `boundaries`. E.g. boundaries=[5, 10] on a 15-page input
+        produces three outputs: pages 1-5, 6-10, 11-15.
+
+    `filename_template` accepts `{stem}`, `{ext}` (incl. dot), and
+    `{idx}` (1-based output number). Output goes under `output_dir`
+    (created if missing). Existing files are NOT overwritten —
+    `derive_output_path`-style dedupe runs per output.
+
+    Returns the list of paths written.
+    """
+    src = Path(input_path)
+    if not src.is_file():
+        raise PdfEditError(f"Source file not found: {input_path}")
+    dst_dir = Path(output_dir)
+    dst_dir.mkdir(parents=True, exist_ok=True)
+
+    reader = _open_reader(input_path)
+    n = len(reader.pages)
+    if n == 0:
+        raise PdfEditError("Source PDF has no pages.")
+
+    # Resolve mode → list of (start_page, end_page) inclusive ranges
+    # in 0-based indices.
+    ranges: list[tuple[int, int]] = []
+    if mode == "every_page":
+        ranges = [(i, i) for i in range(n)]
+    elif mode == "every_n":
+        if every_n < 1:
+            raise PdfEditError(f"every_n must be ≥ 1 (got {every_n}).")
+        for start in range(0, n, every_n):
+            end = min(start + every_n - 1, n - 1)
+            ranges.append((start, end))
+    elif mode == "boundaries":
+        bds = sorted(set(int(b) for b in (boundaries or [])))
+        if not bds:
+            raise PdfEditError(
+                "`boundaries` must list at least one 0-based "
+                "page index to split before.")
+        for b in bds:
+            if not 0 < b < n:
+                raise PdfEditError(
+                    f"Boundary {b} out of range (must be 1..{n - 1}).")
+        # Build ranges: pages [0..bds[0]-1], [bds[0]..bds[1]-1], …,
+        # [bds[-1]..n-1].
+        cuts = [0, *bds, n]
+        ranges = [(cuts[i], cuts[i + 1] - 1) for i in range(len(cuts) - 1)]
+    else:
+        raise PdfEditError(
+            f"Unknown split mode: {mode!r}. "
+            "Use 'every_page', 'every_n', or 'boundaries'.")
+
+    # Emit one output per range.
+    written: list[str] = []
+    stem = src.stem
+    ext = src.suffix
+    for i, (start, end) in enumerate(ranges, start=1):
+        name = filename_template.format(stem=stem, ext=ext, idx=i)
+        path = derive_output_path_in(dst_dir, name)
+        writer = _new_writer()
+        for p in range(start, end + 1):
+            writer.add_page(reader.pages[p])
+        _write(writer, path)
+        written.append(path)
+    return written
+
+
+def derive_output_path_in(directory: Path, filename: str) -> str:
+    """Variant of `derive_output_path` for splits — given a target
+    directory and a desired filename, return a path that doesn't
+    overwrite an existing file (`name.pdf` → `name-2.pdf` if taken)."""
+    target = directory / filename
+    if not target.exists():
+        return str(target)
+    stem = target.stem; suffix = target.suffix
+    i = 2
+    while True:
+        cand = directory / f"{stem}-{i}{suffix}"
+        if not cand.exists():
+            return str(cand)
+        i += 1
+
+
 def insert_blank_page(input_path: str, output_path: str,
                        after_index: int,
                        width: float | None = None,

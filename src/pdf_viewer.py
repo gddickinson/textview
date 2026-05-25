@@ -41,7 +41,10 @@ class PdfViewer(QPdfView):
     """
 
     # Annotation modes accepted by `set_annotation_mode`. "off" disables.
-    POINT_MODES = ("sticky",)
+    # `edit_text` (v3.5 tier 3) reuses the click-only behaviour of
+    # POINT_MODES — the bridge in `pdf_text_edit_actions` hit-tests
+    # the click against `list_text_spans` to find an editable span.
+    POINT_MODES = ("sticky", "edit_text")
     RECT_MODES = ("freetext", "highlight", "underline",
                   "strikeout", "rect", "circle")
     ALL_MODES = POINT_MODES + RECT_MODES + ("off",)

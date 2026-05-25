@@ -350,6 +350,123 @@ def test_open_missing_file_raises(tmp_path):
         rotate_pages(str(tmp_path / "nope.pdf"), str(out), [0], 90)
 
 
+# ---------------------------------------------------------- split --
+
+from src.pdf_editor import split_pdf, derive_output_path_in
+
+
+def test_split_every_page(tmp_path):
+    src = _make_pdf(tmp_path / "in.pdf", page_count=5)
+    out_dir = tmp_path / "out"
+    paths = split_pdf(str(src), str(out_dir))
+    assert len(paths) == 5
+    # Each output has exactly one page.
+    for p in paths:
+        widths = _read_page_widths(Path(p))
+        assert len(widths) == 1
+
+
+def test_split_every_n(tmp_path):
+    """5-page PDF split every 2 pages → 3 files (2 + 2 + 1)."""
+    src = _make_pdf(tmp_path / "in.pdf", page_count=5)
+    out_dir = tmp_path / "out"
+    paths = split_pdf(str(src), str(out_dir), mode="every_n", every_n=2)
+    assert len(paths) == 3
+    widths = [_read_page_widths(Path(p)) for p in paths]
+    assert [len(w) for w in widths] == [2, 2, 1]
+
+
+def test_split_boundaries(tmp_path):
+    """15-page split at boundaries [5, 10] → 3 files (1-5, 6-10, 11-15)."""
+    src = _make_pdf(tmp_path / "in.pdf", page_count=15)
+    out_dir = tmp_path / "out"
+    paths = split_pdf(str(src), str(out_dir),
+                       mode="boundaries", boundaries=[5, 10])
+    assert len(paths) == 3
+    counts = [len(_read_page_widths(Path(p))) for p in paths]
+    assert counts == [5, 5, 5]
+
+
+def test_split_boundaries_unsorted_input(tmp_path):
+    """The boundaries list is sorted before use, so [10, 5] is the
+    same as [5, 10]."""
+    src = _make_pdf(tmp_path / "in.pdf", page_count=15)
+    out_dir = tmp_path / "out"
+    paths = split_pdf(str(src), str(out_dir),
+                       mode="boundaries", boundaries=[10, 5])
+    counts = [len(_read_page_widths(Path(p))) for p in paths]
+    assert counts == [5, 5, 5]
+
+
+def test_split_boundaries_out_of_range_raises(tmp_path):
+    src = _make_pdf(tmp_path / "in.pdf", page_count=5)
+    out_dir = tmp_path / "out"
+    with pytest.raises(PdfEditError):
+        split_pdf(str(src), str(out_dir),
+                  mode="boundaries", boundaries=[10])
+
+
+def test_split_boundaries_empty_raises(tmp_path):
+    src = _make_pdf(tmp_path / "in.pdf", page_count=5)
+    out_dir = tmp_path / "out"
+    with pytest.raises(PdfEditError):
+        split_pdf(str(src), str(out_dir),
+                  mode="boundaries", boundaries=[])
+
+
+def test_split_unknown_mode_raises(tmp_path):
+    src = _make_pdf(tmp_path / "in.pdf", page_count=3)
+    out_dir = tmp_path / "out"
+    with pytest.raises(PdfEditError):
+        split_pdf(str(src), str(out_dir), mode="bananas")
+
+
+def test_split_every_n_validates(tmp_path):
+    src = _make_pdf(tmp_path / "in.pdf", page_count=3)
+    out_dir = tmp_path / "out"
+    with pytest.raises(PdfEditError):
+        split_pdf(str(src), str(out_dir), mode="every_n", every_n=0)
+
+
+def test_split_custom_template(tmp_path):
+    """`filename_template` controls output naming."""
+    src = _make_pdf(tmp_path / "doc.pdf", page_count=3)
+    out_dir = tmp_path / "out"
+    paths = split_pdf(str(src), str(out_dir),
+                       filename_template="{stem}_p{idx}{ext}")
+    assert all(Path(p).name in ("doc_p1.pdf", "doc_p2.pdf", "doc_p3.pdf")
+               for p in paths)
+
+
+def test_split_dedupes_existing_files(tmp_path):
+    """If `name.pdf` already exists, the split adds `-2`, `-3`, …
+    so a re-run never clobbers a previous split."""
+    src = _make_pdf(tmp_path / "doc.pdf", page_count=2)
+    out_dir = tmp_path / "out"
+    # Run twice. The second call should pick up `-2` suffix paths.
+    paths1 = split_pdf(str(src), str(out_dir))
+    paths2 = split_pdf(str(src), str(out_dir))
+    assert set(paths1).isdisjoint(set(paths2)), \
+        f"second split clobbered first: {paths1=} {paths2=}"
+
+
+def test_split_missing_input_raises(tmp_path):
+    out_dir = tmp_path / "out"
+    with pytest.raises(PdfEditError):
+        split_pdf(str(tmp_path / "nope.pdf"), str(out_dir))
+
+
+def test_derive_output_path_in_basic(tmp_path):
+    p = derive_output_path_in(tmp_path, "doc.pdf")
+    assert p.endswith("doc.pdf")
+
+
+def test_derive_output_path_in_dedupes(tmp_path):
+    (tmp_path / "doc.pdf").write_bytes(b"")
+    p = derive_output_path_in(tmp_path, "doc.pdf")
+    assert p.endswith("doc-2.pdf")
+
+
 def test_open_corrupt_pdf_raises(tmp_path):
     p = tmp_path / "junk.pdf"
     p.write_bytes(b"not a pdf at all")
