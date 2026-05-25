@@ -209,6 +209,25 @@ the wakeups self-schedule with ~30 min between fires.
 
 ---
 
+## v3.5 — PDF editing 🚧
+
+After "do we have Adobe-style PDF editing?" the realistic Python
+ecosystem was surveyed and the scope split into three tiers.
+
+| Tier | Item | Status |
+| --- | --- | --- |
+| 1 | Page operations: rotate / delete / extract / reorder / merge / insert blank | ✅ *(shipped 2026-05-25)* |
+| 2 | Annotations: highlight / sticky note / freehand (via PyMuPDF) | 📅 |
+| 3 | Inline text editing | 🤔 *(no Python library handles this reliably; deferred indefinitely)* |
+| — | Cryptographic signing (via endesive + OpenSSL) | 🤔 |
+
+Tier 1 (`src/pdf_editor.py` + `src/pdf_actions.py`) uses `pypdf`
+(already a dep) and ships ~40 tests. All operations write to a
+sibling `*-edited.pdf` — the source is never mutated. New **PDF**
+menu + Ctrl+]/Ctrl+[ for rotate. See SESSION_LOG.md entry.
+
+---
+
 ## v3.4 — finish the file-lifecycle story ✅ *(shipped 2026-05-25)*
 
 After v3.3 shipped LaTeX, templates, save-as conversion, audio playback,

@@ -103,6 +103,14 @@ def build(w):
     m_media = mb.addMenu("&Media")
     _add(m_media, w.action_video_play_pause, w.action_video_stop)
 
+    m_pdf = mb.addMenu("&PDF")
+    _add(m_pdf, w.action_pdf_rotate_cw, w.action_pdf_rotate_ccw,
+         w.action_pdf_rotate_180, None,
+         w.action_pdf_delete_page, w.action_pdf_extract,
+         w.action_pdf_reorder, None,
+         w.action_pdf_insert_after, w.action_pdf_insert_start, None,
+         w.action_pdf_merge)
+
     m_table = mb.addMenu("&Table")
     # Ctrl+T (action_toggle_render) is the universal "toggle render" — for CSV
     # it flips between table view and code view. Re-listing it here makes the

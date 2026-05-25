@@ -1,5 +1,78 @@
 # SESSION_LOG.md
 
+## 2026-05-25 — v3.5 phase 1: PDF page editing
+
+After the user asked "do we have the ability to add pdf editing —
+such as with Adobe software?", scoped + shipped the **page
+operations** tier. Annotation tier and inline text editing remain
+out of scope (separately deferred).
+
+### `pdf_editor.py` — pypdf-backed primitives
+
+Six pure functions, every one writing to a new path so the input
+file is never mutated:
+
+- **`rotate_pages(in, out, indices, degrees)`** — multi-page rotate,
+  any multiple of 90.
+- **`delete_pages(in, out, indices)`** — refuses to delete every
+  page (would leave an empty PDF).
+- **`extract_pages(in, out, indices)`** — preserves the caller's
+  order, so this doubles as the reorder primitive when the indices
+  are a full permutation.
+- **`reorder_pages(in, out, new_order)`** — full-permutation
+  validation wrapper around `extract_pages`.
+- **`merge_pdfs(input_paths, out)`** — concatenation in input order.
+- **`insert_blank_page(in, out, after_index, width=None, height=None)`** —
+  blank-page dimensions clone the page next to the insertion when
+  not explicit, so a multi-size document stays consistent.
+
+Plus two helpers:
+
+- **`parse_page_range(spec, page_count)`** — human ranges like
+  `"1-3,7,10-end"`, with the `end` keyword and dedupe.
+- **`derive_output_path(input_path)`** — sibling `*-edited.pdf`,
+  auto-deduping (`-2.pdf` / `-3.pdf` / …) so a re-run never
+  clobbers a previous result.
+
+All errors funnel through `PdfEditError`, which the action handlers
+catch and surface via `QMessageBox.warning`.
+
+### `pdf_actions.py` — MainWindow bridge
+
+Each handler asserts a PDF is open, reads the active page from
+`pdf_view.pageNavigator().currentPage()`, runs the operation against
+a sibling `*-edited.pdf`, then opens the result in a new tab. No
+operation mutates the source.
+
+Wired actions: rotate CW (`Ctrl+]`) / CCW (`Ctrl+[`) / 180°, delete
+current, extract pages…, reorder pages…, insert blank after current,
+insert blank at start, merge with PDFs….
+
+A new top-level **PDF** menu in `menus.py` collects them all.
+
+### Tests
+
+`tests/test_pdf_editor.py` — **40 tests** covering the page-range
+parser (single / multi / range / `end` keyword / dedupe /
+out-of-range / reversed / bad token), `derive_output_path` dedupe,
+every operation's happy path, edge cases (rotate 180, insert at
+start / end, merge of one PDF as copy, reorder full-permutation
+requirement, delete-all refusal), and error paths (missing file,
+corrupt PDF, out-of-range indices, bad rotation angle).
+
+**Full suite: 665 → 705 passing.**
+
+### What we explicitly didn't build
+
+- **Inline text editing** — Adobe Acrobat itself mangles layouts;
+  no Python library handles it reliably. The user was warned of
+  this trade-off before approving the scope.
+- **Annotations** (highlight / sticky note / freehand / redaction) —
+  would need PyMuPDF (new optional dep) plus UI work to map screen
+  clicks to PDF page coordinates. Tracked as a v3.6 follow-up.
+- **Cryptographic signing** — separate sub-project (`endesive` +
+  OpenSSL workflow).
+
 ## 2026-05-25 — v3.4 polish: docs refresh + agent tools + UX harness + Origin probe
 
 After v3.4 shipped the eight new file-type families, this follow-up

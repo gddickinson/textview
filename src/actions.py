@@ -70,6 +70,18 @@ def build(w):
     w.action_home = mk("Home page", w.web.go_home, "Ctrl+Home")
     w.action_bookmark = mk("Bookmark this page", w.bookmarks.add_current, "Ctrl+D")
     w.action_compile_latex = mk("Compile LaTeX → PDF", w.compile_latex, "F6")
+    # PDF page operations — all write to a sibling `name-edited.pdf`,
+    # never mutate the source. Open the result in a new tab.
+    from . import pdf_actions as _pdf
+    w.action_pdf_rotate_cw    = mk("Rotate current page 90° CW",  lambda: _pdf.rotate_current_page(w, 90),  "Ctrl+]")
+    w.action_pdf_rotate_ccw   = mk("Rotate current page 90° CCW", lambda: _pdf.rotate_current_page(w, 270), "Ctrl+[")
+    w.action_pdf_rotate_180   = mk("Rotate current page 180°",    lambda: _pdf.rotate_current_page(w, 180))
+    w.action_pdf_delete_page  = mk("Delete current page…",        lambda: _pdf.delete_current_page(w))
+    w.action_pdf_extract      = mk("Extract pages…",              lambda: _pdf.extract_pages_dialog(w))
+    w.action_pdf_merge        = mk("Merge with PDFs…",            lambda: _pdf.merge_with_dialog(w))
+    w.action_pdf_insert_after = mk("Insert blank page after current", lambda: _pdf.insert_blank_after_current(w))
+    w.action_pdf_insert_start = mk("Insert blank page at start",      lambda: _pdf.insert_blank_at_start(w))
+    w.action_pdf_reorder      = mk("Reorder pages…",              lambda: _pdf.reorder_pages_dialog(w))
     from .archive_loader import (
         show_extract_member_picker as _arc_pick,
         show_extract_all as _arc_all,

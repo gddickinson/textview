@@ -68,6 +68,17 @@ canonical reference.
 | Ctrl+Alt+R | Notebook: run all cells |
 | Ctrl+Alt+↑ / ↓ | Notebook: move cell up / down |
 
+## PDF editing
+
+| Shortcut | Action |
+| --- | --- |
+| Ctrl+] | Rotate current page 90° CW |
+| Ctrl+[ | Rotate current page 90° CCW |
+| (menu) | Rotate 180° / Delete current / Extract pages… / Reorder / Insert blank / Merge with PDFs… |
+
+All operations write to a sibling `*-edited.pdf` next to the source.
+The original file is never modified.
+
 ## Tables / data / sheets
 
 | Shortcut | Action |
