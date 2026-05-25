@@ -1,5 +1,114 @@
 # SESSION_LOG.md
 
+## 2026-05-25 — Deferred items: XLSX, SQLite, archives, audio metadata
+
+After committing the lifecycle expansion, picked up the deferred
+items in ROI order.
+
+### Spreadsheets (.xlsx / .xlsm / .xltx / .xltm / .xls / .ods)
+
+`src/spreadsheet_loader.py` extracts one sheet to CSV-shaped text and
+reuses the existing `TableView`. `openpyxl` (added to requirements)
+handles XLSX; `.ods` via lazy `pandas` + `odfpy`; legacy `.xls` via
+lazy `xlrd`. Missing optional readers raise `SpreadsheetReadError`
+with an install hint instead of crashing.
+
+`file_loader.detect_format` routes the new extensions to format
+`xlsx`; `load_file` calls into the loader and returns CSV. `MainWindow`
+caches the workbook's sheet names so **Table → Switch sheet…** (F4)
+can swap sheets without reopening. The status-bar label gains a
+"sheet N/M: 'Name'" suffix.
+
+`TABLE_FORMATS = {"csv", "xlsx", "sqlite"}` replaces the old hardcoded
+`fmt == "csv"` checks in `_sync_content`, `_refresh_view`, and
+`on_toggle_render`, so the new formats share every CSV affordance
+(filter bar, sortable headers, derived columns, edit mode).
+
+Integers like `5.0` from openpyxl get squashed to `"5"` by
+`_format_cell` so the table view's numeric-column sniffer still works.
+
+### SQLite browser (.sqlite / .sqlite3 / .db)
+
+`src/sqlite_loader.py` opens a read-only `file:…?mode=ro` URI
+connection — writes are blocked by SQLite itself, so no extra
+validation is needed for the `Run SQL…` runner. `list_tables(path)`
+skips `sqlite_*` internal-bookkeeping tables. `load_table_as_csv`
+caps at 100,000 rows and appends a "# (truncated…)" line when the
+limit fires; `run_query_as_csv` runs ad-hoc SELECTs against the
+read-only connection. Table identifiers are validated by
+`_is_safe_identifier` (letter/underscore start, then alphanumerics +
+underscore only) so the f-string injection surface is closed.
+
+`looks_like_sqlite(path)` is a magic-byte sniff (`b"SQLite format 3\x00"`)
+used by `file_loader` to fall back to plain-text reading on `.db`
+files that aren't actually SQLite (Berkeley DB / LevelDB / …) — no
+more "could not open SQLite database" crash on those.
+
+Two menu actions (**Table → Switch table…** at F4 and
+**Table → Run SQL…** at Ctrl+Shift+Q); the F4 binding dispatches to
+either the xlsx or sqlite picker based on active format.
+
+### Archive viewer (.zip / .tar / .tar.gz / .tar.bz2 / .tar.xz / .7z)
+
+`src/archive_loader.py` lists members of common archives and exposes
+extract helpers. ZIP / TAR via stdlib; `.7z` lazy-imports `py7zr` with
+a friendly error.
+
+The viewer side is intentionally lightweight: archives are converted
+to a **markdown table of contents** by `render_listing_markdown(path)`,
+which goes through the existing markdown rendering pipeline so theme,
+search, copy-paste all work for free. `_refresh_view` and
+`on_toggle_render` both treat format `archive` the same as `markdown`
+when rendering.
+
+Path-traversal defence: `_safe_join` rejects absolute paths and any
+`..` component, so a malicious zip containing `../evil.txt` can't
+write outside the chosen destination. `extract_all` silently skips
+bad members rather than aborting the whole extraction.
+
+Compound extensions (`.tar.gz` / `.tar.bz2` / `.tar.xz` / `.tar.zst`)
+needed special handling in `detect_format` since `Path.suffix` only
+returns the last piece — added a small compound-suffix check before
+the `FORMAT_MAP` lookup.
+
+Two menu actions wired under **Run → Archive: extract member… /
+extract all…**.
+
+### Audio metadata (no new dependency)
+
+`VideoView._on_metadata` listens for `QMediaPlayer.metaDataChanged`
+and refreshes the audio-only "♪ filename" panel with title / artist /
+album / year / genre / duration when the decoder reports them. Qt's
+own metadata API pulls ID3 (MP3), Vorbis comments (FLAC / OGG), and
+MP4 atoms (M4A / AAC) from the running decoder — no extra dep.
+Falls back to the filename when tags are absent.
+
+### Dependencies pinned
+
+`requirements.txt` gained `openpyxl`, `PyYAML`, `tomli_w`,
+`markdownify`. Comment in the file makes the graceful-degradation
+contract explicit so a future contributor doesn't assume they're
+hard requirements.
+
+### Tests
+
+- `tests/test_spreadsheet_loader.py` — 12 tests including round-trip,
+  sheet picker, int-vs-float handling, multi-sheet, error paths, and
+  the file_loader integration. ODS test is `pytest.skipif`-gated for
+  hosts without `pandas`+`odfpy`.
+- `tests/test_sqlite_loader.py` — 16 tests covering magic-byte sniff,
+  table listing (incl. `sqlite_sequence` skip), CSV extraction with a
+  cap, identifier-injection rejection, read-only enforcement (DELETE /
+  CREATE both raise), the file_loader integration, and the `.db`
+  fallback for non-SQLite files.
+- `tests/test_archive_loader.py` — 29 tests covering zip + tar +
+  compound-extension detection, listing shape, extract helpers, and
+  the path-traversal defence (with a real ZIP containing `../evil.txt`).
+- `tests/test_languages.py` — `xlsx`, `sqlite`, `archive` added to
+  the Pygments-skip set.
+
+**Full suite: 529 → 588 passing**, 1 skipped (ODS — needs pandas+odfpy).
+
 ## 2026-05-25 — Audit + close the create / save / detect gaps
 
 After adding LaTeX support, audited every step of the file lifecycle

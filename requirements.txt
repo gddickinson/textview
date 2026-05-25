@@ -22,3 +22,10 @@ keyring>=24.0
 anthropic>=0.20
 openai>=1.30
 pytest>=8.0
+# Save-As conversion + spreadsheet support (graceful-degradation: each is
+# imported lazily and the corresponding converter / loader is filtered out
+# of the offered list when missing).
+openpyxl>=3.1
+PyYAML>=6.0
+tomli_w>=1.0
+markdownify>=0.11

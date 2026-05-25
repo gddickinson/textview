@@ -74,7 +74,8 @@ def build(w):
          None, w.action_edit_mode, w.action_copy_all)
 
     _add(mb.addMenu("&Run"), w.action_run, w.action_run_selection,
-         w.action_stop_run, None, w.action_compile_latex, None,
+         w.action_stop_run, None, w.action_compile_latex,
+         w.action_archive_extract_one, w.action_archive_extract_all, None,
          w.action_toggle_runner,
          w.action_python_repl, w.action_pick_python, w.action_jupyter_console,
          w.action_notebook_start, w.action_notebook_run_all,
@@ -108,7 +109,7 @@ def build(w):
     # operation discoverable from the Table menu without claiming a second
     # shortcut.
     _add(m_table, w.action_toggle_render, w.action_toggle_spreadsheet,
-         w.action_table_copy_tsv)
+         w.action_switch_sheet, w.action_run_sql, w.action_table_copy_tsv)
 
     m_scripts = mb.addMenu("&Scripts")
     # Dynamic menu: rebuilt every time the user opens it so newly-saved

@@ -72,6 +72,19 @@ FORMAT_MAP = {
     ".mk": "make",
     ".mak": "make",
     ".ipynb": "notebook",
+    # Spreadsheets — extracted to CSV text and displayed in TableView.
+    ".xlsx": "xlsx", ".xlsm": "xlsx", ".xltx": "xlsx", ".xltm": "xlsx",
+    ".xls": "xlsx", ".ods": "xlsx",
+    # SQLite databases — browsed table-by-table through TableView.
+    ".sqlite": "sqlite", ".sqlite3": "sqlite", ".db": "sqlite",
+    # Archives — rendered as a markdown table of contents; menu actions
+    # extract members. Note .jar/.war/.apk/.epub are also ZIP files but
+    # we route them based on listing intent rather than mime.
+    ".zip": "archive", ".jar": "archive", ".war": "archive",
+    ".apk": "archive", ".ipa": "archive",
+    ".tar": "archive", ".tgz": "archive", ".tbz2": "archive",
+    ".txz": "archive", ".tb2": "archive",
+    ".7z": "archive",
     # LaTeX source — edited as text, can be compiled to PDF on demand.
     ".tex": "latex", ".latex": "latex", ".ltx": "latex",
     ".bib": "bibtex",
@@ -140,6 +153,10 @@ VIDEO_FORMATS = {"video"}
 AUDIO_FORMATS = {"audio"}
 # Media that go through QMediaPlayer rather than the text pipeline.
 MEDIA_FORMATS = VIDEO_FORMATS | AUDIO_FORMATS
+# Formats that get the TableView treatment (filter bar, sorting, derived
+# columns). `xlsx` and `sqlite` are extracted to CSV text under the hood
+# so this stays cohesive — see `spreadsheet_loader.py` / `sqlite_loader.py`.
+TABLE_FORMATS = {"csv", "xlsx", "sqlite"}
 
 ENCODINGS_TO_TRY = ["utf-8", "utf-8-sig", "utf-16", "latin-1", "cp1252"]
 
@@ -181,6 +198,13 @@ def detect_format(path) -> str:
     p = Path(path)
     by_name = FILENAME_MAP.get(p.name.lower())
     if by_name: return by_name
+    # Compound extensions like `.tar.gz`/`.tar.bz2`/`.tar.xz` aren't
+    # captured by Path.suffix — consult the archive loader's compound-
+    # aware detector before falling back to single-suffix lookup.
+    name_lower = p.name.lower()
+    for compound in (".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst"):
+        if name_lower.endswith(compound):
+            return "archive"
     # Use the original suffix (case-sensitive) for `.S` (gas) so it doesn't
     # collide with `.s` — both still resolve via FORMAT_MAP, but cmake / make
     # and other lowercase-only entries still work.
@@ -234,6 +258,9 @@ def file_dialog_filter() -> str:
         "Markdown (*.md *.markdown)",
         "Markup (*.html *.htm *.xml)",
         "Data (*.json *.yaml *.yml *.csv *.tsv *.toml *.ini *.cfg *.conf)",
+        "Spreadsheets (*.xlsx *.xlsm *.xltx *.xltm *.xls *.ods)",
+        "SQLite databases (*.sqlite *.sqlite3 *.db)",
+        "Archives (*.zip *.tar *.tar.gz *.tgz *.tar.bz2 *.tbz2 *.tar.xz *.txz *.7z *.jar *.war *.apk)",
         f"Code ({code_exts.replace('.', '*.')})",
         "LaTeX (*.tex *.latex *.ltx *.bib)",
         "Markup / docs (*.adoc *.asciidoc *.org *.typ *.mediawiki *.wiki *.textile)",
@@ -298,6 +325,36 @@ def load_file(path):
         }[fmt]
         text = extractor(str(p))
         return text, f"{fmt} → text", fmt
+
+    if fmt == "xlsx":
+        # Extract the first sheet to CSV text; MainWindow handles sheet
+        # switching for multi-sheet workbooks.
+        from .spreadsheet_loader import load_sheet_as_csv, list_sheets
+        sheets = list_sheets(str(p))
+        sheet_label = sheets[0] if sheets else "(empty)"
+        csv_text = load_sheet_as_csv(str(p), 0)
+        return csv_text, f"{p.suffix.lstrip('.')} · sheet={sheet_label}", fmt
+
+    if fmt == "sqlite":
+        # For ambiguous `.db` files, sniff magic bytes before trusting
+        # the extension — Berkeley DB / LevelDB / etc. live here too.
+        from .sqlite_loader import looks_like_sqlite, list_tables, load_table_as_csv
+        if p.suffix.lower() == ".db" and not looks_like_sqlite(p):
+            text, encoding = _read_text(str(p))
+            return text, encoding, "plain"
+        tables = list_tables(str(p))
+        first = tables[0] if tables else None
+        if first is None:
+            return "", f"{p.suffix.lstrip('.')} · (no tables)", fmt
+        csv_text = load_table_as_csv(str(p), first)
+        return csv_text, f"{p.suffix.lstrip('.')} · table={first}", fmt
+
+    if fmt == "archive":
+        # Listing rendered as markdown so the viewer's existing markdown
+        # pipeline handles theming, syntax, copy-paste, search.
+        from .archive_loader import render_listing_markdown
+        md = render_listing_markdown(str(p))
+        return md, "archive listing", fmt
 
     text, encoding = _read_text(str(p))
     return text, encoding, fmt

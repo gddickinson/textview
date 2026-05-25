@@ -14,7 +14,7 @@ from .config_panel import ConfigPanel
 from .settings import SettingsManager
 from .file_loader import (
     load_file, file_info, file_dialog_filter, humansize, DOCUMENT_FORMATS,
-    IMAGE_FORMATS, VIDEO_FORMATS, AUDIO_FORMATS, MEDIA_FORMATS,
+    IMAGE_FORMATS, VIDEO_FORMATS, AUDIO_FORMATS, MEDIA_FORMATS, TABLE_FORMATS,
 )
 from .document_extract import DocumentExtractionError
 from .renderers import apply_pygments, render_markdown_html, escape_to_html
@@ -231,10 +231,32 @@ class MainWindow(QMainWindow):
             self.viewer.image_view.load(path)
         elif fmt in MEDIA_FORMATS:
             self.viewer.video_view.load(path)
-        elif fmt == "csv":
+        elif fmt in TABLE_FORMATS:
             self._table_source = None; self._load_csv_table(content)
+            if fmt == "xlsx":
+                from .spreadsheet_loader import list_sheets
+                try:
+                    self._xlsx_sheets = list_sheets(path)
+                except Exception:
+                    self._xlsx_sheets = []
+                self._xlsx_sheet_index = 0
+            elif fmt == "sqlite":
+                from .sqlite_loader import list_tables
+                try:
+                    self._sqlite_tables = list_tables(path)
+                except Exception:
+                    self._sqlite_tables = []
+                self._sqlite_table_index = 0
         elif fmt == "notebook":
             self.viewer.notebook_view.load(path)
+        elif fmt == "archive":
+            from .archive_loader import list_members
+            try:
+                self._archive_members = list_members(path)
+            except Exception:
+                self._archive_members = []
+            # Content is the markdown listing — `_refresh_view` routes
+            # `archive` through the markdown renderer for the rendered view.
         elif fmt == "plain":
             from .file_inspector import maybe_unknown_file_report
             if (rep := maybe_unknown_file_report(path)) is not None: content, kind = rep; self._current_content = content; self._current_format = fmt = "markdown"; self.lbl_format.setText(f"Format: {kind}")
@@ -315,7 +337,7 @@ class MainWindow(QMainWindow):
         m = self.viewer.mode()
         if m == self.viewer.MODE_CODE:
             self._current_content = self.viewer.code.toPlainText()
-        elif (m == self.viewer.MODE_TABLE and self._current_format == "csv"
+        elif (m == self.viewer.MODE_TABLE and self._current_format in TABLE_FORMATS
                 and self.viewer.table_view.has_model()):
             text = self.viewer.table_view.serialize(self._table_delimiter)
             self._current_content = text
@@ -367,15 +389,26 @@ class MainWindow(QMainWindow):
             )
             self.viewer.show_pdf()
             return
-        if fmt == "csv" and d.csv_view_as_table and self.viewer.table_view.has_model():
+        if fmt in TABLE_FORMATS and d.csv_view_as_table and self.viewer.table_view.has_model():
             self._sync_content()  # pull live edits before deciding to re-parse
             self._load_csv_table(self._current_content)
             view_styler.apply_table(self.viewer.table_view, d)
             self.viewer.show_table()
             self.table_filter_bar.show()
+            suffix = ""
+            if fmt == "xlsx":
+                sheets = getattr(self, "_xlsx_sheets", []) or []
+                idx = getattr(self, "_xlsx_sheet_index", 0)
+                if 0 <= idx < len(sheets):
+                    suffix = f" · sheet {idx + 1}/{len(sheets)}: {sheets[idx]!r}"
+            elif fmt == "sqlite":
+                tables = getattr(self, "_sqlite_tables", []) or []
+                idx = getattr(self, "_sqlite_table_index", 0)
+                if 0 <= idx < len(tables):
+                    suffix = f" · table {idx + 1}/{len(tables)}: {tables[idx]!r}"
             self.lbl_format.setText(
                 f"Table · {self.viewer.table_view.shape_label()} · "
-                f"sep={self._table_delimiter!r}")
+                f"sep={self._table_delimiter!r}{suffix}")
             return
         self.table_filter_bar.hide()
 
@@ -388,7 +421,7 @@ class MainWindow(QMainWindow):
         self._sync_content()
 
         if d.render_markdown:
-            if fmt == "markdown":
+            if fmt == "markdown" or fmt == "archive":
                 self.viewer.rendered.setHtml(render_markdown_html(self._current_content, theme, d))
                 self.viewer.show_rendered(); return
             if fmt == "html":
@@ -418,7 +451,7 @@ class MainWindow(QMainWindow):
                                  d.pdf_zoom_mode, d.pdf_zoom)
                 self.viewer.show_pdf()
             return
-        if self._current_format == "csv" and self.viewer.table_view.has_model():
+        if self._current_format in TABLE_FORMATS and self.viewer.table_view.has_model():
             if self.viewer.mode() == self.viewer.MODE_TABLE:
                 self._populate_code_view(); self.viewer.show_code()
                 self.table_filter_bar.hide()
@@ -432,7 +465,7 @@ class MainWindow(QMainWindow):
             self._populate_code_view()
             self.viewer.show_code()
             return
-        if self._current_format == "markdown":
+        if self._current_format == "markdown" or self._current_format == "archive":
             self.viewer.rendered.setHtml(
                 render_markdown_html(self._current_content, theme, d)
             )

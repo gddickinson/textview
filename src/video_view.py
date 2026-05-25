@@ -132,6 +132,9 @@ class VideoView(QWidget):
         self.player = QMediaPlayer(self)
         self.audio = QAudioOutput(self)
         self.player.setAudioOutput(self.audio)
+        # metaDataChanged fires once the decoder has parsed embedded
+        # ID3 / Vorbis / MP4 tags — pipe the result into the audio panel.
+        self.player.metaDataChanged.connect(self._on_metadata)
         self.player.setVideoOutput(self.surface)
         self.audio.setVolume(self.s_vol.value() / 100.0)
         self.player.positionChanged.connect(self._on_position)
@@ -162,7 +165,43 @@ class VideoView(QWidget):
         self._audio_mode = bool(on)
         self._stack.setCurrentWidget(self._audio_panel if on else self.surface)
         if on:
+            self._fallback_audio_name = display_name or ""
             self._audio_name.setText(display_name or "")
+
+    def _on_metadata(self):
+        """Refresh the audio-only panel label from decoder-extracted
+        metadata. Only kicks in when `set_audio_mode(True, ...)` is
+        active — video files keep their black surface."""
+        if not getattr(self, "_audio_mode", False) or self.player is None:
+            return
+        from PyQt6.QtMultimedia import QMediaMetaData
+        md = self.player.metaData()
+        # `value(key)` returns `None` (or empty str) when the tag isn't
+        # present; only include fields we actually got.
+        def _get(key):
+            v = md.value(key) if md is not None else None
+            return str(v).strip() if v else ""
+        title = _get(QMediaMetaData.Key.Title)
+        artist = _get(QMediaMetaData.Key.AlbumArtist) or _get(QMediaMetaData.Key.ContributingArtist)
+        album = _get(QMediaMetaData.Key.AlbumTitle)
+        year = _get(QMediaMetaData.Key.Date)
+        genre = _get(QMediaMetaData.Key.Genre)
+        lines: list[str] = []
+        if title: lines.append(f"<b>{title}</b>")
+        else: lines.append(f"<b>{getattr(self, '_fallback_audio_name', '')}</b>")
+        if artist:
+            line = artist
+            if album: line += f" — <i>{album}</i>"
+            if year:  line += f"  ({year[:4]})"
+            lines.append(line)
+        elif album:
+            lines.append(f"<i>{album}</i>")
+        if genre: lines.append(f"<span style='color:#888'>{genre}</span>")
+        # Duration is on QMediaPlayer, not metaData() — pick it up here too.
+        dur = self.player.duration()
+        if dur > 0:
+            lines.append(f"<span style='color:#888'>{_fmt_ms(dur)}</span>")
+        self._audio_name.setText("<br>".join(lines))
 
     def play(self):
         if self.player is not None: self.player.play()

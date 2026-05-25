@@ -70,6 +70,14 @@ def build(w):
     w.action_home = mk("Home page", w.web.go_home, "Ctrl+Home")
     w.action_bookmark = mk("Bookmark this page", w.bookmarks.add_current, "Ctrl+D")
     w.action_compile_latex = mk("Compile LaTeX → PDF", w.compile_latex, "F6")
+    from .archive_loader import (
+        show_extract_member_picker as _arc_pick,
+        show_extract_all as _arc_all,
+    )
+    w.action_archive_extract_one = mk("Archive: extract member…",
+                                       lambda: _arc_pick(w))
+    w.action_archive_extract_all = mk("Archive: extract all…",
+                                       lambda: _arc_all(w))
     w.action_run = mk("Run", w.run.run_current, "F5")
     w.action_run_selection = mk("Run selection", w.run.run_selection, "Ctrl+Return")
     w.action_stop_run = mk("Stop", w.run.stop, "Ctrl+.")
@@ -167,6 +175,21 @@ def build(w):
     w.action_toggle_image_panel = dock_action(w.image_panel, "Image adjustments panel", "Ctrl+Shift+M")
     w.action_toggle_terminal = dock_action(w.terminal_dock, "Shell terminal", "Ctrl+`")
     w.action_table_copy_tsv = mk("Copy table selection as TSV", w._table_copy_tsv)
+
+    def _switch_sheet_or_table():
+        fmt = w._current_format
+        if fmt == "xlsx":
+            from .spreadsheet_loader import show_sheet_picker; show_sheet_picker(w)
+        elif fmt == "sqlite":
+            from .sqlite_loader import show_table_picker; show_table_picker(w)
+        else:
+            w.statusBar().showMessage(
+                "Switch sheet/table: not a workbook or database.", 5000)
+    w.action_switch_sheet = mk("Switch sheet / table…",
+                               _switch_sheet_or_table, "F4")
+    from .sqlite_loader import show_query_runner as _show_query_runner
+    w.action_run_sql = mk("Run SQL (SQLite)…",
+                         lambda: _show_query_runner(w), "Ctrl+Shift+Q")
     w.action_toggle_spreadsheet = dock_action(w.spreadsheet_panel, "Spreadsheet panel", "Ctrl+Shift+E")
     w.action_toggle_diagnostics = dock_action(w.diagnostics_panel, "Diagnostics panel", "Ctrl+Shift+X")
     w.action_toggle_citations = dock_action(w.citation_panel, "Citations panel", "Ctrl+Shift+Z")
