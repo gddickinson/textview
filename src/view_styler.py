@@ -66,6 +66,10 @@ def apply_theme(viewer, theme, d=None):
     viewer.code.set_bracket_match_color(theme["selection_bg"])
 
     apply_table_theme(viewer.table_view, theme, d)
+    # Video / audio view: theme the audio-only overlay so .mp3/.flac
+    # don't render with hard-coded dark colours on Light themes.
+    if hasattr(viewer, "video_view") and hasattr(viewer.video_view, "apply_theme"):
+        viewer.video_view.apply_theme(theme)
 
 
 def apply_table_theme(tv, theme, d=None):
@@ -110,14 +114,33 @@ def apply_table_theme(tv, theme, d=None):
     tv.setPalette(pal)
     tv.horizontalHeader().setPalette(pal)
     tv.verticalHeader().setPalette(pal)
+    # The corner button (top-left intersection of headers) and the
+    # vertical header pull from the application palette by default,
+    # so a previously-set theme leaks through on switch. Push the
+    # theme's header_bg explicitly onto both. `cornerWidget()` is
+    # what Qt's QTableView uses internally — styling its palette
+    # plus a dedicated stylesheet entry is the belt-and-braces fix.
+    corner = tv.cornerWidget() if hasattr(tv, "cornerWidget") else None
+    if corner is not None:
+        cpal = corner.palette()
+        for role in (QPalette.ColorRole.Window, QPalette.ColorRole.Button,
+                     QPalette.ColorRole.Base):
+            cpal.setColor(role, QColor(header_bg))
+        for role in (QPalette.ColorRole.WindowText, QPalette.ColorRole.ButtonText):
+            cpal.setColor(role, QColor(header_fg))
+        corner.setPalette(cpal)
+        corner.setAutoFillBackground(True)
     tv.setStyleSheet(
-        f"QTableView {{ gridline-color: {grid}; }}"
+        f"QTableView {{ gridline-color: {grid}; "
+        f"               background-color: {bg}; }}"
         f"QHeaderView::section {{ background-color: {header_bg}; "
         f"                        color: {header_fg}; "
         f"                        border: 1px solid {grid}; "
         f"                        padding: 3px 6px; }}"
-        f"QTableCornerButton::section {{ background-color: {header_bg}; "
-        f"                                border: 1px solid {grid}; }}"
+        f"QTableView QTableCornerButton::section, "
+        f"QAbstractItemView QTableCornerButton::section {{ "
+        f"                        background-color: {header_bg}; "
+        f"                        border: 1px solid {grid}; }}"
     )
 
 

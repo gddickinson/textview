@@ -57,14 +57,16 @@ class VideoView(QWidget):
         self._stack.setSizePolicy(QSizePolicy.Policy.Expanding,
                                   QSizePolicy.Policy.Expanding)
         self.surface = QVideoWidget(self._stack)
+        # Video surface stays black — the video frame is whatever the
+        # decoder writes, and themed bg would just be invisible behind it.
         self.surface.setStyleSheet("background:#000;")
         self._audio_panel = QWidget(self._stack)
-        self._audio_panel.setStyleSheet(
-            "background:#1e1e1e; color:#eee; font-size:14pt;")
+        # Default styling — the host calls `apply_theme(theme)` whenever
+        # the active theme changes so these colours track the rest of
+        # the app instead of being hardcoded dark.
         ap_layout = QVBoxLayout(self._audio_panel)
         ap_layout.setContentsMargins(40, 40, 40, 40); ap_layout.setSpacing(12)
         self._audio_icon = QLabel("♪", self._audio_panel)
-        self._audio_icon.setStyleSheet("font-size:80pt; color:#888;")
         self._audio_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._audio_name = QLabel("(no audio loaded)", self._audio_panel)
         self._audio_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -77,6 +79,9 @@ class VideoView(QWidget):
         self._stack.addWidget(self._audio_panel)
         layout.addWidget(self._stack, 1)
         self._audio_mode = False
+        # Sensible default until `apply_theme` is invoked.
+        self.apply_theme({"bg": "#1e1e1e", "fg": "#eee",
+                          "line_number_fg": "#888"})
 
         # Transport bar.
         bar = QWidget(self)
@@ -154,6 +159,25 @@ class VideoView(QWidget):
         except Exception as e:
             self.errored.emit(str(e))
             return False
+
+    def apply_theme(self, theme: dict) -> None:
+        """Push the active theme onto the audio-only panel. Called by
+        `view_styler.apply_theme` so the `♪ filename` overlay matches
+        the rest of the app instead of using hardcoded dark colours."""
+        bg = theme.get("bg", "#1e1e1e")
+        fg = theme.get("fg", "#eee")
+        muted = theme.get("line_number_fg", "#888")
+        # Use stylesheets rather than palette: the icon QLabel needs
+        # its own colour for the big ♪, and labels inside a styled
+        # parent don't inherit palette across themes reliably.
+        self._audio_panel.setStyleSheet(
+            f"background:{bg}; color:{fg}; font-size:14pt;")
+        self._audio_icon.setStyleSheet(
+            f"font-size:80pt; color:{muted};")
+        # The metadata label rebuilds its HTML on metaDataChanged using
+        # whatever colours are set; keep its parent's color so a fresh
+        # label inherits the theme'd foreground.
+        self._audio_name.setStyleSheet(f"color:{fg};")
 
     def set_audio_mode(self, on: bool, display_name: str = ""):
         """Flip between the video surface and the audio-only label panel.

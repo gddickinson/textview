@@ -168,7 +168,7 @@ any of the ten themes for theme-drift checks.
 15 cases, 14 captured on a clean run (cert skips when `cryptography`
 isn't installed).
 
-### F4 — Table row-number gutter ignores theme (still open)
+### F4 — Table corner button leaked previous theme (FIXED)
 
 **Symptom**: switch to **Light** theme, open any table-shaped file
 (`.csv`, `.xlsx`, `.sqlite`, `.npy`, `.parquet`, `.h5`). The cells
@@ -185,14 +185,26 @@ default palette from the previous theme. `view_styler.apply_table`
 sets a row-number colour but doesn't push it onto the vertical
 header's `QPalette.Window` role.
 
-**Fix candidate**: in `src/view_styler.py::apply_table`, push
-`theme["table_row_number_bg"]` (or fall back to `theme["bg"]`) into
-the vertical header's palette `Window` role, mirroring what
-F1 already does for the data area.
+**Diagnosis** (after pixel-sampling the screenshot): the dark strip
+turned out to be just the **top-left corner button + the strip
+above the row-number column**, not the whole row-number gutter as
+initially suspected. The vertical header itself was correctly using
+`#f5f5f5`; the corner widget was pulling `#002b36` (Solarized Dark
+bg) from the application palette and never re-polishing on theme
+change.
 
-Open — to be fixed in a follow-up.
+**Fix** (in `src/view_styler.py::apply_table_theme`): push the
+theme's `header_bg`/`header_fg` onto `tv.cornerWidget().palette()`
+(`Window` / `Button` / `Base` + `WindowText` / `ButtonText`), set
+`autoFillBackground(True)`, and broaden the `QTableCornerButton`
+stylesheet selector to `QTableView QTableCornerButton::section,
+QAbstractItemView QTableCornerButton::section` so Qt's stylesheet
+engine actually matches it on every build.
 
-### F5 — Audio panel uses hardcoded dark colours
+Verified visually — Light theme HDF5 view now shows a uniform light
+table with no dark patch at top-left.
+
+### F5 — Audio panel uses hardcoded dark colours (FIXED)
 
 **Symptom**: VideoView's audio-only panel (the `♪ filename` overlay
 for `.mp3` / `.flac` / etc.) is styled with hard-coded
@@ -203,10 +215,13 @@ app.
 Not in the matrix output because the matrix doesn't load audio files
 (no fixture), but the visual issue is obvious by inspection.
 
-**Fix candidate**: route the audio panel's background through the
-active theme — use `theme["bg"]` / `theme["fg"]` from `apply_all`.
-
-Open — to be fixed in a follow-up.
+**Fix**: added `VideoView.apply_theme(theme)` which sets the audio
+panel's stylesheet from `theme["bg"]` / `theme["fg"]` /
+`theme["line_number_fg"]` (for the muted ♪ icon).
+`view_styler.apply_theme` now invokes it on every theme change, so
+the panel tracks the active theme rather than baking in
+`#1e1e1e/#eee`. The video surface stays black on purpose — a
+themed bg would just be invisible behind the decoder's video frame.
 
 ### F6 — Archive tree view in Light theme uses default palette (OK)
 
