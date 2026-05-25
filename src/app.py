@@ -287,6 +287,9 @@ class MainWindow(QMainWindow):
             # Load into the dedicated tree view as the default; Ctrl+T
             # flips to the markdown-TOC rendered view.
             self.viewer.archive_view.load(path)
+        elif fmt == "mesh":
+            # Dedicated 3D mesh viewer with embedded matplotlib canvas.
+            self.viewer.mesh_view.load(path)
         elif fmt == "plain":
             from .file_inspector import maybe_unknown_file_report
             if (rep := maybe_unknown_file_report(path)) is not None: content, kind = rep; self._current_content = content; self._current_format = fmt = "markdown"; self.lbl_format.setText(f"Format: {kind}")
@@ -406,6 +409,11 @@ class MainWindow(QMainWindow):
                 f"Archive · {n} members · "
                 f"{Path(self._current_path or '').name}")
             return
+        if fmt == "mesh":
+            self.viewer.show_mesh()
+            self.lbl_format.setText(
+                f"3D mesh · {Path(self._current_path or '').name}")
+            return
         if fmt in MEDIA_FORMATS:
             self.viewer.show_video()
             label = "Audio" if fmt in AUDIO_FORMATS else "Video"
@@ -473,7 +481,7 @@ class MainWindow(QMainWindow):
         self._sync_content()
 
         if d.render_markdown:
-            if fmt in ("markdown", "archive", "cert"):
+            if fmt in ("markdown", "archive", "cert", "blend"):
                 self.viewer.rendered.setHtml(render_markdown_html(self._current_content, theme, d))
                 self.viewer.show_rendered(); return
             if fmt == "html" or fmt == "font":
@@ -526,7 +534,7 @@ class MainWindow(QMainWindow):
             self._populate_code_view()
             self.viewer.show_code()
             return
-        if self._current_format in ("markdown", "archive", "cert"):
+        if self._current_format in ("markdown", "archive", "cert", "blend"):
             self.viewer.rendered.setHtml(
                 render_markdown_html(self._current_content, theme, d)
             )

@@ -1,5 +1,94 @@
 # SESSION_LOG.md
 
+## 2026-05-25 — 3D mesh viewer + Blender file inspector
+
+After v3.5 (PDF) wrapped, picked up the deferred "3D files / Blender"
+follow-up.
+
+### `mesh_loader.py` + `mesh_view.py` — 3D mesh support
+
+trimesh-backed (MIT, ~5 MB, no native deps). Supports nine
+extensions in one library: `.stl`, `.obj`, `.ply`, `.glb`,
+`.gltf`, `.dae`, `.3mf`, `.off`, `.x3d`.
+
+- `load_mesh(path)` returns either a `Trimesh` (single-mesh files)
+  or a `Scene` (multi-object — common for `.glb`/`.gltf`/`.dae`);
+  `is_scene(loaded)` distinguishes. Uses `process=True` so STL
+  files (which write three independent vertices per face) get
+  merged — without that, a unit cube has 36 vertices and reports
+  as not-watertight. Permissive trimesh responses (empty Scene
+  for garbage, empty Trimesh for malformed input) are caught and
+  re-raised as `MeshReadError("unparseable")`.
+- `mesh_stats(loaded) → MeshStats(...)` — vertex / face counts,
+  object count, bbox, extents, volume (only set when watertight),
+  watertightness flag, normals / vertex-colour presence, units,
+  materials.
+- `stats_to_markdown(stats)` renders the side-panel content.
+- `render_preview_png(loaded, out, size=...)` is the matplotlib
+  3D snapshot. Decimates above 50k faces for the preview only —
+  underlying mesh is never mutated.
+
+`mesh_view.py` — new `MODE_MESH`. `MeshView(QWidget)` is a
+horizontal `QSplitter` with:
+- **Left**: embedded matplotlib `FigureCanvasQTAgg` + the
+  `NavigationToolbar2QT` (drag to rotate, scroll to zoom, save as
+  PNG). The figure is rebuilt from scratch on each load so axes
+  don't accumulate.
+- **Right**: `QTextBrowser` showing the markdown stats.
+
+### `blend_inspector.py` — Blender file inspector (best-effort)
+
+No realistic open-source Python reader for `.blend` exists. We
+read the 12-byte header only:
+
+- Bytes 0..6: `b"BLENDER"` magic
+- Byte 7: pointer size (`_` = 4 byte, `-` = 8 byte)
+- Byte 8: endianness (`v` = little, `V` = big)
+- Bytes 9..11: Blender version (e.g. `404` → 4.04)
+
+`render_markdown(path)` produces a report telling the user to
+open in Blender or its free Blend Viewer; for mesh extraction,
+suggests exporting as `.stl`/`.obj`/`.glb` — all of which TextView
+reads through `mesh_loader`.
+
+### Wiring
+
+- `file_loader.FORMAT_MAP` adds the nine mesh extensions → `"mesh"`,
+  `.blend` → `"blend"`.
+- `load_file` for `mesh` returns empty body + `"<ext> mesh"` label;
+  MeshView does the loading on its own.
+- `load_file` for `blend` runs `render_markdown` and routes through
+  the markdown view (same pattern as cert / archive listing).
+- `MainWindow.open_file` dispatches `fmt == "mesh"` to
+  `viewer.mesh_view.load(path)`.
+- `_refresh_view` adds `show_mesh()` for `mesh` and the markdown
+  rendering branch for `blend`.
+- File dialog filter gains "3D meshes" and "Blender" entries.
+
+### Tests
+
+- **`test_mesh_loader.py`** — 23 tests covering extension detection,
+  STL cube load (watertight, volume ~1, extents 1×1×1), OBJ sphere
+  load (vertex/face counts, volume ~4.19), Markdown stats rendering,
+  PNG preview render including decimation path, GLB scene handling
+  (Scene vs Trimesh disambiguation), error paths (missing file,
+  corrupt file produces friendly `MeshReadError`), file_loader
+  integration.
+- **`test_blend_inspector.py`** — 13 tests covering magic-byte
+  detection, header parsing for both pointer sizes + both
+  endiannesses, short-file / wrong-magic / missing-file errors,
+  markdown rendering, file_loader integration. Fixtures synthesise
+  valid 12-byte headers + padding without needing a real Blender
+  file.
+
+End-to-end smoke verified through MainWindow: STL cube opens in
+`mesh` mode with 12-face stats; `.blend` opens in `rendered` mode
+showing the markdown report with the parsed version "4.04".
+
+requirements.txt gains `trimesh>=4.0` (MIT, lazy-imported).
+
+### Full suite: 826 → 862 passing.
+
 ## 2026-05-25 — Doc refresh after v3.5 complete
 
 Audited every doc for stale references to feature lists / test

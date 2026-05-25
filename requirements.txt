@@ -48,3 +48,6 @@ pymupdf4llm>=0.0.20
 pdf2docx>=0.5
 # Cryptographic PDF signing (PAdES). MIT-licensed. Lazy-imported.
 pyHanko>=0.20
+# 3D mesh viewer (.stl/.obj/.ply/.glb/.gltf/.dae/.3mf/.off/.x3d).
+# MIT-licensed. Lazy-imported.
+trimesh>=4.0

@@ -87,6 +87,12 @@ FORMAT_MAP = {
     # HDF5 / NetCDF hierarchical scientific data.
     ".h5": "hdf5", ".hdf5": "hdf5", ".he5": "hdf5",
     ".nc": "hdf5", ".nc4": "hdf5", ".cdf": "hdf5",
+    # 3D meshes — rendered as a matplotlib 3D preview + stats panel.
+    ".stl": "mesh", ".obj": "mesh", ".ply": "mesh",
+    ".glb": "mesh", ".gltf": "mesh", ".dae": "mesh",
+    ".3mf": "mesh", ".off": "mesh", ".x3d": "mesh",
+    # Blender — no Python reader, identified for metadata only.
+    ".blend": "blend",
     # X.509 certificates + PEM keys — rendered as a markdown report.
     ".pem": "cert", ".crt": "cert", ".cer": "cert", ".der": "cert",
     ".key": "cert",
@@ -279,6 +285,8 @@ def file_dialog_filter() -> str:
         "SQLite databases (*.sqlite *.sqlite3 *.db)",
         "NumPy arrays (*.npy *.npz)",
         "MATLAB / Parquet / HDF5 (*.mat *.parquet *.feather *.arrow *.h5 *.hdf5 *.nc *.nc4)",
+        "3D meshes (*.stl *.obj *.ply *.glb *.gltf *.dae *.3mf *.off *.x3d)",
+        "Blender (*.blend)",
         "Certificates / keys (*.pem *.crt *.cer *.der *.key)",
         "Fonts (*.ttf *.otf *.woff *.woff2 *.ttc *.otc *.pfb *.pfa)",
         "Archives (*.zip *.tar *.tar.gz *.tgz *.tar.bz2 *.tbz2 *.tar.xz *.txz *.7z *.jar *.war *.apk)",
@@ -426,6 +434,17 @@ def load_file(path):
             return "", f"hdf5 · (no datasets)", fmt
         csv_text = load_dataset_as_csv(str(p), first)
         return csv_text, f"{p.suffix.lstrip('.')} · dataset={first}", fmt
+
+    if fmt == "mesh":
+        # The MeshView widget loads via `trimesh` directly; we just
+        # return an empty body so MainWindow knows to dispatch to it.
+        return "", f"{p.suffix.lstrip('.')} mesh", fmt
+
+    if fmt == "blend":
+        # `.blend` has no Python reader — render a metadata report
+        # through the existing markdown view.
+        from .blend_inspector import render_markdown
+        return render_markdown(str(p)), "blender file", fmt
 
     text, encoding = _read_text(str(p))
     return text, encoding, fmt

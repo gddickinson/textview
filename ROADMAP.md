@@ -248,6 +248,8 @@ considering until real demand appears.
 | 7 | **MATLAB binary** (`.mat`) | small | ✅ |
 | 8 | **HDF5 / NetCDF** (`.h5`/`.hdf5`/`.nc`) | heavy | ✅ |
 | 9 | **EPUB write** (markdown → EPUB) | mid | 🤔 |
+| 10 | **3D meshes** (`.stl`/`.obj`/`.ply`/`.glb`/`.gltf`/`.dae`/`.3mf`/`.off`/`.x3d`) — trimesh + matplotlib 3D | small | ✅ *(shipped 2026-05-25)* |
+| 11 | **Blender** (`.blend`) header inspector — read-only metadata, no Python parser exists | small | ✅ *(shipped 2026-05-25)* |
 
 ### Detail per item
 
