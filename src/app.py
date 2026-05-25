@@ -247,6 +247,13 @@ class MainWindow(QMainWindow):
                 except Exception:
                     self._sqlite_tables = []
                 self._sqlite_table_index = 0
+            elif fmt == "numpy":
+                from .numpy_loader import list_arrays
+                try:
+                    self._numpy_arrays = list_arrays(path)
+                except Exception:
+                    self._numpy_arrays = []
+                self._numpy_array_index = 0
         elif fmt == "notebook":
             self.viewer.notebook_view.load(path)
         elif fmt == "archive":
@@ -406,6 +413,11 @@ class MainWindow(QMainWindow):
                 idx = getattr(self, "_sqlite_table_index", 0)
                 if 0 <= idx < len(tables):
                     suffix = f" · table {idx + 1}/{len(tables)}: {tables[idx]!r}"
+            elif fmt == "numpy":
+                arrays = getattr(self, "_numpy_arrays", []) or []
+                idx = getattr(self, "_numpy_array_index", 0)
+                if 0 <= idx < len(arrays):
+                    suffix = f" · array {idx + 1}/{len(arrays)}: {arrays[idx]!r}"
             self.lbl_format.setText(
                 f"Table · {self.viewer.table_view.shape_label()} · "
                 f"sep={self._table_delimiter!r}{suffix}")
@@ -421,10 +433,10 @@ class MainWindow(QMainWindow):
         self._sync_content()
 
         if d.render_markdown:
-            if fmt == "markdown" or fmt == "archive":
+            if fmt in ("markdown", "archive", "cert"):
                 self.viewer.rendered.setHtml(render_markdown_html(self._current_content, theme, d))
                 self.viewer.show_rendered(); return
-            if fmt == "html":
+            if fmt == "html" or fmt == "font":
                 self.viewer.rendered.setHtml(self._current_content)
                 self.viewer.show_rendered(); return
             if fmt in RICH_FORMATS and self._rich.has_body():
@@ -465,11 +477,11 @@ class MainWindow(QMainWindow):
             self._populate_code_view()
             self.viewer.show_code()
             return
-        if self._current_format == "markdown" or self._current_format == "archive":
+        if self._current_format in ("markdown", "archive", "cert"):
             self.viewer.rendered.setHtml(
                 render_markdown_html(self._current_content, theme, d)
             )
-        elif self._current_format == "html":
+        elif self._current_format == "html" or self._current_format == "font":
             self.viewer.rendered.setHtml(self._current_content)
         elif self._current_format in RICH_FORMATS and self._rich.has_body():
             self.viewer.rendered.setHtml(self._rich.render(theme, d))

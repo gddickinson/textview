@@ -139,3 +139,25 @@ def test_csv_to_xlsx_bytes():
     assert isinstance(out, bytes)
     # XLSX is a ZIP — magic bytes start with 'PK'.
     assert out[:2] == b"PK"
+
+
+@pytest.mark.skipif(not _have(["docx"]), reason="python-docx not installed")
+def test_md_to_docx_bytes():
+    md = (
+        "# Heading\n\n"
+        "A paragraph with **bold** and *italic* and `code`.\n\n"
+        "- one\n- two\n"
+        "\n```\nblock of code\n```\n"
+    )
+    out = sa._md_to_docx(md, {})
+    assert isinstance(out, bytes)
+    # DOCX is a ZIP package.
+    assert out[:2] == b"PK"
+    # Round-trip: reopen with python-docx and verify content survived.
+    import docx, io
+    doc = docx.Document(io.BytesIO(out))
+    text = "\n".join(p.text for p in doc.paragraphs)
+    assert "Heading" in text
+    assert "bold" in text and "italic" in text and "code" in text
+    assert "one" in text and "two" in text
+    assert "block of code" in text

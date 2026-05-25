@@ -182,10 +182,12 @@ def build(w):
             from .spreadsheet_loader import show_sheet_picker; show_sheet_picker(w)
         elif fmt == "sqlite":
             from .sqlite_loader import show_table_picker; show_table_picker(w)
+        elif fmt == "numpy":
+            from .numpy_loader import show_array_picker; show_array_picker(w)
         else:
             w.statusBar().showMessage(
-                "Switch sheet/table: not a workbook or database.", 5000)
-    w.action_switch_sheet = mk("Switch sheet / table…",
+                "Switch sheet/table/array: not a workbook, database, or NumPy file.", 5000)
+    w.action_switch_sheet = mk("Switch sheet / table / array…",
                                _switch_sheet_or_table, "F4")
     from .sqlite_loader import show_query_runner as _show_query_runner
     w.action_run_sql = mk("Run SQL (SQLite)…",

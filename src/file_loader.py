@@ -77,6 +77,15 @@ FORMAT_MAP = {
     ".xls": "xlsx", ".ods": "xlsx",
     # SQLite databases — browsed table-by-table through TableView.
     ".sqlite": "sqlite", ".sqlite3": "sqlite", ".db": "sqlite",
+    # NumPy array files — extracted to CSV like spreadsheets.
+    ".npy": "numpy", ".npz": "numpy",
+    # X.509 certificates + PEM keys — rendered as a markdown report.
+    ".pem": "cert", ".crt": "cert", ".cer": "cert", ".der": "cert",
+    ".key": "cert",
+    # Font files — rendered as an HTML sample sheet (the rendered view
+    # picks up `font-family` once QFontDatabase has registered the file).
+    ".ttf": "font", ".otf": "font", ".woff": "font", ".woff2": "font",
+    ".ttc": "font", ".otc": "font", ".pfb": "font", ".pfa": "font",
     # Archives — rendered as a markdown table of contents; menu actions
     # extract members. Note .jar/.war/.apk/.epub are also ZIP files but
     # we route them based on listing intent rather than mime.
@@ -154,9 +163,9 @@ AUDIO_FORMATS = {"audio"}
 # Media that go through QMediaPlayer rather than the text pipeline.
 MEDIA_FORMATS = VIDEO_FORMATS | AUDIO_FORMATS
 # Formats that get the TableView treatment (filter bar, sorting, derived
-# columns). `xlsx` and `sqlite` are extracted to CSV text under the hood
-# so this stays cohesive — see `spreadsheet_loader.py` / `sqlite_loader.py`.
-TABLE_FORMATS = {"csv", "xlsx", "sqlite"}
+# columns). `xlsx`, `sqlite`, `numpy` are extracted to CSV text under the
+# hood so this stays cohesive — see the respective `*_loader.py` modules.
+TABLE_FORMATS = {"csv", "xlsx", "sqlite", "numpy"}
 
 ENCODINGS_TO_TRY = ["utf-8", "utf-8-sig", "utf-16", "latin-1", "cp1252"]
 
@@ -260,6 +269,9 @@ def file_dialog_filter() -> str:
         "Data (*.json *.yaml *.yml *.csv *.tsv *.toml *.ini *.cfg *.conf)",
         "Spreadsheets (*.xlsx *.xlsm *.xltx *.xltm *.xls *.ods)",
         "SQLite databases (*.sqlite *.sqlite3 *.db)",
+        "NumPy arrays (*.npy *.npz)",
+        "Certificates / keys (*.pem *.crt *.cer *.der *.key)",
+        "Fonts (*.ttf *.otf *.woff *.woff2 *.ttc *.otc *.pfb *.pfa)",
         "Archives (*.zip *.tar *.tar.gz *.tgz *.tar.bz2 *.tbz2 *.tar.xz *.txz *.7z *.jar *.war *.apk)",
         f"Code ({code_exts.replace('.', '*.')})",
         "LaTeX (*.tex *.latex *.ltx *.bib)",
@@ -355,6 +367,28 @@ def load_file(path):
         from .archive_loader import render_listing_markdown
         md = render_listing_markdown(str(p))
         return md, "archive listing", fmt
+
+    if fmt == "numpy":
+        from .numpy_loader import list_arrays, load_array_as_csv, array_metadata
+        names = list_arrays(str(p))
+        first = names[0] if names else "array"
+        csv_text = load_array_as_csv(str(p), first)
+        try:
+            meta = array_metadata(str(p), first)
+            label = f"{p.suffix.lstrip('.')} · {first} · shape={meta['shape']} dtype={meta['dtype']}"
+        except Exception:
+            label = f"{p.suffix.lstrip('.')} · {first}"
+        return csv_text, label, fmt
+
+    if fmt == "cert":
+        from .cert_loader import render_markdown
+        md = render_markdown(str(p))
+        return md, "certificate report", fmt
+
+    if fmt == "font":
+        from .font_loader import load_and_render
+        html = load_and_render(str(p))
+        return html, "font sample", fmt
 
     text, encoding = _read_text(str(p))
     return text, encoding, fmt

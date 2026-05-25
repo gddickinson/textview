@@ -188,6 +188,11 @@ def _json_to_csv(text: str, _opts: dict) -> str:
     return out.getvalue()
 
 
+def _md_to_docx(text: str, _opts: dict) -> bytes:
+    from .docx_writer import markdown_to_docx_bytes
+    return markdown_to_docx_bytes(text)
+
+
 def _rtf_strip(text: str, _opts: dict) -> str:
     """Best-effort RTF → plain. Strips control words / groups."""
     import re
@@ -241,6 +246,11 @@ _CONVERSIONS: list[Conversion] = [
     # RTF → plain
     Conversion("rtf_to_txt", "rtf", ".txt", "plain",
                "RTF → plain text (strip markup)", _rtf_strip),
+
+    # Markdown → DOCX (rich text Word document)
+    Conversion("md_to_docx", "markdown", ".docx", "docx",
+               "Markdown → DOCX (Word document)", _md_to_docx,
+               requires=("docx",)),
 ]
 
 

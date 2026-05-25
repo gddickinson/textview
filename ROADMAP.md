@@ -7,14 +7,15 @@ heading. Status codes: ✅ shipped, 🚧 in progress, 📅 planned, 🤔 conside
 
 | Area | Capability |
 | --- | --- |
-| **File formats** | Plain text, Markdown, HTML, JSON, YAML, CSV/TSV/PSV/TAB, TOML, INI; ~20 code languages with Pygments highlighting; PDF (native + extracted text + search + select/copy from rendered); DOCX (mammoth-rendered HTML + extracted); RTF, EPUB, ODT; 15 image formats incl. animated GIF, multi-page TIFF, multi-frame WebP, SVG, HEIC; 12 video formats via QtMultimedia. |
+| **File formats** | Plain text, Markdown, HTML, JSON / NDJSON / JSONL / GeoJSON, YAML, CSV/TSV/PSV/TAB, TOML, INI; **~60 code languages** with Pygments highlighting; PDF (native + extracted text + search + select/copy from rendered); DOCX (mammoth-rendered HTML + extracted); RTF, EPUB, ODT; **LaTeX** (`.tex`/`.latex`/`.ltx` source + on-demand PDF compile via xelatex / pdflatex auto-pick); BibTeX; **Excel / OpenDocument** (`.xlsx`/`.xlsm`/`.xltx`/`.xltm`/`.xls`/`.ods` → table view with sheet picker); **SQLite** (`.sqlite`/`.sqlite3`/`.db` read-only, table picker + Run SQL); **archives** (`.zip`/`.tar`/`.tar.gz`/`.tar.bz2`/`.tar.xz`/`.7z`/.jar/.war/.apk — markdown TOC + extract); subtitles (`.srt`/`.vtt`/`.ass`/`.ssa`); email/cal/contacts (`.eml`/`.mbox`/`.ics`/`.vcs`/`.vcf`); markup alternates (AsciiDoc / Org / Typst / MediaWiki); IaC (`.tf`/`.hcl`/`.nix`/`.proto`/`.graphql`/`.prisma`); 15 image formats incl. animated GIF, multi-page TIFF, multi-frame WebP, SVG, HEIC; 12 video formats; **13 audio formats** (mp3/wav/flac/ogg/opus/aac/m4a/aiff/midi/…) via QtMultimedia. |
 | **Display** | 10 themes; live typography (font/size/weight/line-height/letter-spacing/padding); word wrap; line numbers; whitespace toggle; current-line highlight; max content width; alignment; **per-element table colour overrides** (gridlines / cell text / alt-row / header bg+fg / selection bg+fg). |
 | **Search/edit** | Find/replace bar; goto line; toggle line comment; word/line/char counts; trim trailing whitespace + final newline on save; recent files; bracket auto-close; auto-indent; line move/duplicate/select; tabs↔spaces; LF/CRLF conversion. |
 | **Browser** | Embedded Chromium; bookmarks; reading mode; view source; DevTools. |
 | **Runner** | Async `QProcess` runner; ANSI 16+RGB output; ~20 language interpreters; F5/Ctrl+Enter/Ctrl+.; per-file trust; CPU/memory rlimits; **real PTY terminal with pyte** (Ctrl+`). |
 | **Image viewer** | Zoom/fit/rotate/slideshow; multi-page navigation; **brightness/contrast/saturation/gamma sliders**; checkered backdrop; folder browse. |
 | **Video viewer** | Embedded `QMediaPlayer` + transport bar (play/pause/stop/scrub/volume/mute) for mp4/mov/mkv/webm/avi/… |
-| **Tables** | Spreadsheet view for delimited data; sortable headers (numeric vs lexical auto-detect); contiguous selection with sum/avg/min/max/median/stddev; copy-as-TSV; live filter bar (`>`, `>=`, `<`, `<=`, `=`, `≠`, `~`); insert/delete rows/cols; **chart dialog** (Line/Bar/Scatter/Histogram/Pie/Box) via matplotlib. |
+| **Tables** | Spreadsheet view shared by **CSV / XLSX / SQLite**; sortable headers (numeric vs lexical auto-detect); contiguous selection with sum/avg/min/max/median/stddev; copy-as-TSV; live filter bar (`>`, `>=`, `<`, `<=`, `=`, `≠`, `~`); insert/delete rows/cols; **chart dialog** (Line/Bar/Scatter/Histogram/Pie/Box) via matplotlib; **Switch sheet/table…** (F4) for multi-sheet workbooks and multi-table databases; **Run SQL…** (Ctrl+Shift+Q) on SQLite (read-only). |
+| **Templates + Save As** | **New from template…** (Ctrl+Alt+N) with ~25 starter files (README, LaTeX article, Python script, Dockerfile, …). **Save As with format conversion** offers a converter when the chosen extension differs from the current format — markdown ↔ HTML, JSON ↔ YAML ↔ TOML, CSV → JSON / JSONL / XLSX / Markdown / HTML, JSON → CSV, RTF → plain. Save reopens the file so view-mode / highlighting follow the new format. |
 | **Metadata** | Per-file dock with EXIF, PDF info, DOCX/EPUB props. |
 | **Security** | Default-safe web profile; download dialog; cert prompts; per-file run-trust; resource limits. |
 | **LLM** | Chat panel (Ctrl+J); Anthropic + OpenAI + Ollama (with **tool-calling**); streaming; key in `keyring`; **22 tools** (read-only + action + module-control via AppAPI); audit log. |
@@ -206,11 +207,101 @@ lot are realistic to clear in a focused wave?
 Each W is one wakeup checkpoint. The user can interrupt; otherwise
 the wakeups self-schedule with ~30 min between fires.
 
+---
+
+## v3.4 — finish the file-lifecycle story 🚧
+
+After v3.3 shipped LaTeX, templates, save-as conversion, audio playback,
+XLSX/SQLite/archive readers, this wave closes the remaining gaps. Items
+are listed in execution order — cheap & no-new-deps first, heavier
+optional-dep ones later.
+
+| # | Item | Scope | Dep state | Status |
+| --- | --- | --- | --- | --- |
+| 1 | **NumPy arrays (`.npy` / `.npz`)** | small | numpy ✓ | 📅 |
+| 2 | **Markdown → DOCX** save-as converter | small | python-docx ✓ | 📅 |
+| 3 | **Certificate / key display** (`.pem`/`.crt`/`.cer`/`.key`) | small | cryptography (new) | 📅 |
+| 4 | **Parquet / Feather** as table | mid | pyarrow (new) | 📅 |
+| 5 | **Archive tree view** (replaces markdown TOC) | mid | stdlib | 📅 |
+| 6 | **Font preview** (`.ttf`/`.otf`/`.woff`/`.woff2`) | small | Qt only | 📅 |
+| 7 | **MATLAB binary** (`.mat`) | small | scipy (new) | 📅 |
+| 8 | **HDF5 / NetCDF** (`.h5`/`.hdf5`/`.nc`) | heavy | h5py / netCDF4 (new) | 📅 |
+| 9 | **EPUB write** (markdown → EPUB) | mid | ebooklib ✓ | 🤔 |
+
+### Detail per item
+
+**NumPy** — `numpy.load(path)`. For `.npy`: 1D becomes a single-column
+table, 2D becomes a multi-column table. For `.npz`: a "Switch array…"
+picker like the sheet/table picker (F4). Dtype shown in the status bar.
+
+**Markdown → DOCX** — extends `save_as.Conversion` registry with a
+single converter that walks the markdown AST and emits `python-docx`
+elements (headings, paragraphs, lists, code blocks, tables, inline
+emphasis). Goes through the existing `EditController.save_as` →
+re-open flow.
+
+**Certificate / key display** — new `cert_loader.py` parses PEM /
+DER X.509 certificates (subject / issuer / validity / SANs / fingerprints
+/ key algorithm + size) and PEM-encoded private keys (type + size,
+**never** the raw bytes). Output rendered as markdown through the
+existing pipeline. Defaults to `cryptography`; falls back to stdlib
+`ssl` for cert basics when missing.
+
+**Parquet / Feather** — new `dataframe_loader.py` mirrors
+`spreadsheet_loader.py`'s shape: extract a tabular blob to CSV text
+and route through the existing `TableView`. Multi-column dtypes shown
+in the status bar.
+
+**Archive tree view** — graduates the current markdown TOC to a real
+`QTreeView` (`archive_view.py`) with size / mtime / type columns,
+text-preview pane for the selected member (up to 1 MB), double-click
+to extract. The markdown TOC stays available via Ctrl+T.
+
+**Font preview** — new `font_view.py` widget: `QFontDatabase.addApplicationFont`
+loads the file, then renders a sample sheet — alphabet upper/lower,
+digits, common punctuation, a couple of weights and sizes, the file's
+PostScript name.
+
+**MATLAB binary** — `scipy.io.loadmat` extracts variables; small
+variables shown in a key/value table; 2D arrays become the active
+TableView; structured arrays expand one row per record.
+
+**HDF5 / NetCDF** — likely deferred to its own wave (significant new
+view: hierarchical group tree + per-dataset table). Specced here so
+the shape is known.
+
+**EPUB write** — `ebooklib` already present from the read path. A
+markdown → EPUB converter would round out the doc-export story. Marked
+"considering" until I see real demand.
+
+### LLM tool surface (extensions to `tools_module.py`)
+
+Once these land, the agent gains:
+- `read_npy_array(path, key=None)` — open NumPy array; returns shape +
+  dtype + first N rows.
+- `read_parquet(path, limit=N)` — Parquet → row dicts.
+- `read_cert(path)` — certificate metadata as JSON.
+- `list_archive(path)` — already implicit through `read_doc`, but a
+  first-class tool helps the agent reason about packaging.
+
+---
+
 ## Beyond v3.0 (parking lot) 🤔
 
 **Cleared in v3.2** ✅: code folding, regex polish, image color picker
 + crop, snippet library, LSP client (Python/pyright + diagnostics +
 hover). Multi-window cleared in v3.1.
+
+**Cleared in v3.3** ✅ *(2026-05-25)*: **LaTeX support** (`.tex`/`.latex`/`.ltx`
++ on-demand PDF compile, xelatex auto-pick), **templates system**
+(Ctrl+Alt+N, ~25 starter files), **Save As with format conversion**
+(md ↔ html, JSON ↔ YAML ↔ TOML, CSV → JSON/JSONL/XLSX/MD/HTML, JSON → CSV,
+RTF → plain), **audio playback** (13 formats through QMediaPlayer with
+ID3/Vorbis metadata overlay), **Excel/ODS** read as table with sheet
+picker, **SQLite browser** with table picker + Run SQL, **archive viewer**
+(zip/tar/7z markdown TOC + extract). ~40 new file-type detections
+(subtitles, email/cal/contacts, IaC, alt-markup, lisp family, more
+languages). 486 → 588 passing tests.
 
 **Cleared in v3.3** ✅ (2026-05-04): persistent test suite (`tests/`,
 **165 cases**), auto-hover on cursor pause, JSON/TOML/XML "runners",

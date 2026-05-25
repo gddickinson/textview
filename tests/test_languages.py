@@ -78,7 +78,8 @@ def test_pygments_can_resolve_every_format():
     skip = {"image", "video", "audio", "notebook",
             "pdf", "docx", "rtf", "epub", "odt",
             "plain", "csv", "xlsx", "sqlite",     # extracted to CSV
-            "archive"}                            # rendered as markdown
+            "archive", "cert",                    # rendered as markdown
+            "font"}                               # rendered as HTML
     for fmt in formats - skip:
         try: get_lexer_by_name(fmt)
         except Exception as e: pytest.fail(f"no Pygments lexer for {fmt!r}: {e}")
