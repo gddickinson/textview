@@ -108,6 +108,14 @@ def build(w):
     w.action_pdf_edit_text_mouse = mk("Edit text: click a span (mouse mode)", lambda: _pdftxt.enter_edit_text_mode(w))
     # Splitting (extends v3.5 phase 1 page operations)
     w.action_pdf_split           = mk("Split into multiple PDFs…",            lambda: _pdf.split_pdf_dialog(w))
+    # Cryptographic signing (v3.5 tier 4)
+    from . import pdf_signing_actions as _pdfsign
+    w.action_pdf_sign            = mk("Sign with certificate (.pfx / .p12)…", lambda: _pdfsign.sign_pdf_dialog(w))
+    w.action_pdf_verify          = mk("Verify signatures…",                   lambda: _pdfsign.verify_signatures_dialog(w))
+    # Reconstruction — edit a PDF by converting to Markdown / DOCX
+    from . import pdf_reconstruct_actions as _pdfrc
+    w.action_pdf_to_markdown     = mk("Convert to editable Markdown…",        lambda: _pdfrc.convert_to_markdown(w))
+    w.action_pdf_to_docx         = mk("Convert to editable DOCX…",            lambda: _pdfrc.convert_to_docx(w))
     from .archive_loader import (
         show_extract_member_picker as _arc_pick,
         show_extract_all as _arc_all,

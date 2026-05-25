@@ -81,6 +81,10 @@ canonical reference.
 | (menu) | **PDF → Edit text: find and replace…** — query + replacement across the whole document |
 | (menu) | **PDF → Edit text: click a span (mouse mode)** — click a text span on the rendered page |
 | (menu) | **PDF → Split into multiple PDFs…** — split every page / every N pages / at boundaries |
+| (menu) | **PDF → Sign with certificate (.pfx / .p12)…** — PAdES signature; optional TSA timestamp for PAdES-T |
+| (menu) | **PDF → Verify signatures…** — pyHanko validation: intact / coverage / trusted / timestamp |
+| (menu) | **PDF → Convert to editable Markdown…** — `pymupdf4llm`-based reconstruction for editing |
+| (menu) | **PDF → Convert to editable DOCX…** — `pdf2docx`-based layout-preserving conversion |
 
 All operations write to a sibling `*-edited.pdf` next to the source.
 The original file is never modified. Annotations need PyMuPDF

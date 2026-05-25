@@ -1,5 +1,115 @@
 # SESSION_LOG.md
 
+## 2026-05-25 — v3.5 tiers 4 + 5: cryptographic signing + PDF reconstruction
+
+User asked me to look into cryptographic signing AND alternative
+methods for editing PDFs (e.g. converting to LaTeX/Word and back).
+Investigated both via a background research agent, then shipped.
+
+### Research findings (kept honest)
+
+**Signing**: pyHanko wins decisively over endesive — MIT-licensed,
+PAdES B-B / B-T / B-LT / B-LTA support, RFC 3161 timestamping,
+real validation including cert-chain + revocation + timestamp.
+Active maintenance (release May 6 2026). Real-world: standard pick
+in Python land, referenced by fpdf2 docs, EU eIDAS-adjacent tools.
+
+**PDF → editable**: surveyed the landscape.
+- **pymupdf4llm** (AGPL like PyMuPDF) — best route. Output is
+  clean Markdown.
+- **pdf2docx** (MIT) — good for plain prose + tables; weak on
+  multi-column / math / footnotes. Artifex now points users at
+  MuPDF.NET but pdf2docx is still the realistic pure-Python option.
+- **marker** — heavy ML stack, GPL-3.0 + OpenRAIL-M model license,
+  4.5GB VRAM. Quality is near-SOTA but install cost is huge.
+- **pdf2htmlEX** — high fidelity but C++ build hell, abandoned
+  upstream.
+- **PDF → LaTeX** — no honest open-source tool exists in 2026.
+  Even LaTeX-generated PDFs can't be reversed to source. Don't
+  promise this.
+
+### Cryptographic signing (`pdf_signing.py`, 279 lines)
+
+- `sign_pdf(in, out, pfx_path=…, passphrase=…, reason=…,
+  location=…, contact=…, timestamp_url=…)`. PKCS#12 keystore
+  required. Passing `timestamp_url` upgrades the result from
+  PAdES-B to PAdES-T.
+- `verify_signatures(path)` returns `list[SignatureReport]` —
+  dataclasses with `field_name`, `signer_name`, `signing_time`,
+  `is_intact`, `coverage`, `trusted`, `errors`, `timestamp_present`.
+- Defensive `_load_pfx` checks for the common "wrong password" path
+  pyHanko surfaces as `signer is None` rather than raising, and
+  re-raises with a clean PdfSigningError("wrong passphrase").
+- Failed sign cleans up the partial output file so the user doesn't
+  end up with a corrupt sibling.
+- All exceptions funnel through `PdfSigningError` — callers never
+  import `pyhanko`.
+
+**12 tests** in `test_pdf_signing.py` covering generate-PFX +
+sign-PDF + verify round-trip (intact + coverage TRUE, trusted FALSE
+because self-signed), metadata preservation, tampering detection
+(after byte-corrupt the signed file, verify reports intact=False or
+the parser refuses outright), error paths (missing PDF, missing PFX,
+wrong passphrase produces a friendly message, partial-file cleanup,
+verify-on-unsigned-PDF returns []).
+
+### PDF → editable reconstruction (`pdf_reconstruct.py`, 150 lines)
+
+- `pdf_to_markdown(in, out=None, pages=None)` via
+  `pymupdf4llm.to_markdown`. Default output is sibling
+  `<stem>-converted.md` with auto-dedupe.
+- `pdf_to_docx(in, out=None, pages=None)` via `pdf2docx.Converter`.
+  Same sibling+dedupe pattern; auto-cleans partial output on
+  failure.
+- Both lazy-import their backend; missing dep surfaces as
+  `PdfReconstructError("install hint")`.
+- The natural round-trip: convert PDF → MD → user edits in TextView
+  → re-export via the existing **Save As → .pdf** path (markdown →
+  HTML → PDF) or **Save As → .docx** (which we built in v3.4). The
+  user gets "edit a PDF by going through another format" without
+  any PDF → LaTeX claim.
+
+**13 tests** in `test_pdf_reconstruct.py` covering MD + DOCX
+round-trip, custom output paths, sibling auto-dedupe, page subset
+selection, missing source raises. DOCX test reopens the result via
+python-docx to verify round-trip text survives.
+
+### Action handlers + menu
+
+`pdf_signing_actions.py` (132 lines):
+- `sign_pdf_dialog`: PFX picker → masked passphrase prompt →
+  reason / location / TSA URL prompts → sibling `<stem>-signed.pdf`
+- `verify_signatures_dialog`: renders each report as
+  "Signer / Signed / intact ✓-✗ / coverage / trusted / timestamp"
+
+`pdf_reconstruct_actions.py` (74 lines):
+- `convert_to_markdown` / `convert_to_docx`: confirmation dialog
+  (explains what's lost) → convert → open result in new tab.
+
+**PDF** menu gains four new entries:
+- Convert to editable Markdown…
+- Convert to editable DOCX…
+- Sign with certificate (.pfx / .p12)…
+- Verify signatures…
+
+### Dependencies
+
+`requirements.txt` gains `pyHanko>=0.20`, `pymupdf4llm>=0.0.20`,
+`pdf2docx>=0.5`. All lazy-imported. AGPL note added for
+pymupdf4llm (matches PyMuPDF, no new license question).
+
+### Full suite: 798 → 826 passing.
+
+### Roadmap status — v3.5 complete
+
+All five tiers shipped:
+1. Page operations ✓
+2a. Dialog-driven annotations ✓
+2b. Mouse-driven annotation UX ✓
+3. Inline text editing + split ✓
+4. Cryptographic signing ✓
+5. PDF → editable reconstruction ✓
+
 ## 2026-05-25 — v3.5 tier 3: inline PDF text editing + split
 
 After the user asked me to investigate inline text editing, I ran

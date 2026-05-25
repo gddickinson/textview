@@ -37,7 +37,14 @@ h5py>=3.10
 netCDF4>=1.6
 # Certificate parsing (X.509). Fallback path uses the `openssl` CLI.
 cryptography>=42.0
-# PDF annotations (v3.5 phase 2). Lazy-imported — every annotation
-# action shows a friendly install hint if missing. Page operations
-# (v3.5 phase 1) use pypdf above and need no extra dep.
+# PDF annotations + inline text editing (v3.5 phases 2-3).
+# Lazy-imported — every annotation / text-edit action shows a
+# friendly install hint if missing. Page operations (v3.5 phase 1)
+# use pypdf above and need no extra dep.
 PyMuPDF>=1.24
+# PDF → editable reconstruction. pymupdf4llm is AGPL like PyMuPDF.
+# pdf2docx is MIT. Both lazy-imported.
+pymupdf4llm>=0.0.20
+pdf2docx>=0.5
+# Cryptographic PDF signing (PAdES). MIT-licensed. Lazy-imported.
+pyHanko>=0.20

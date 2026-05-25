@@ -111,7 +111,9 @@ def build(w):
          w.action_pdf_insert_after, w.action_pdf_insert_start, None,
          w.action_pdf_merge, w.action_pdf_split, None,
          w.action_pdf_edit_text, w.action_pdf_find_replace,
-         w.action_pdf_edit_text_mouse, None)
+         w.action_pdf_edit_text_mouse, None,
+         w.action_pdf_to_markdown, w.action_pdf_to_docx, None,
+         w.action_pdf_sign, w.action_pdf_verify, None)
     m_annot = m_pdf.addMenu("Annotations")
     _add(m_annot, w.action_pdf_annot_sticky, w.action_pdf_annot_text,
          w.action_pdf_annot_hl, w.action_pdf_annot_rect,
