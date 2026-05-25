@@ -82,6 +82,15 @@ def build(w):
     w.action_pdf_insert_after = mk("Insert blank page after current", lambda: _pdf.insert_blank_after_current(w))
     w.action_pdf_insert_start = mk("Insert blank page at start",      lambda: _pdf.insert_blank_at_start(w))
     w.action_pdf_reorder      = mk("Reorder pages…",              lambda: _pdf.reorder_pages_dialog(w))
+    # Annotations (v3.5 phase 2a — dialog-driven; phase 2b adds mouse UX).
+    w.action_pdf_annot_sticky  = mk("Annotate: sticky note…",      lambda: _pdf.annotate_sticky_note(w))
+    w.action_pdf_annot_text    = mk("Annotate: free-text box…",    lambda: _pdf.annotate_freetext(w))
+    w.action_pdf_annot_hl      = mk("Annotate: highlight rect…",   lambda: _pdf.annotate_highlight(w))
+    w.action_pdf_annot_rect    = mk("Annotate: rectangle…",        lambda: _pdf.annotate_rectangle(w))
+    w.action_pdf_annot_circle  = mk("Annotate: circle / ellipse…", lambda: _pdf.annotate_circle(w))
+    w.action_pdf_annot_list    = mk("Annotations: list…",          lambda: _pdf.show_annotations_dialog(w))
+    w.action_pdf_annot_del_one = mk("Annotations: delete one…",    lambda: _pdf.delete_annotation_dialog(w))
+    w.action_pdf_annot_clear   = mk("Annotations: clear all…",     lambda: _pdf.clear_annotations_action(w))
     from .archive_loader import (
         show_extract_member_picker as _arc_pick,
         show_extract_all as _arc_all,

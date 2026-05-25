@@ -75,9 +75,12 @@ canonical reference.
 | Ctrl+] | Rotate current page 90° CW |
 | Ctrl+[ | Rotate current page 90° CCW |
 | (menu) | Rotate 180° / Delete current / Extract pages… / Reorder / Insert blank / Merge with PDFs… |
+| (menu) | **PDF → Annotations**: sticky note / free-text / highlight rect / rectangle / circle / list / delete one / clear all |
 
 All operations write to a sibling `*-edited.pdf` next to the source.
-The original file is never modified.
+The original file is never modified. Annotations need PyMuPDF
+(`pip install PyMuPDF`); page operations need only `pypdf` which
+ships with TextView.
 
 ## Tables / data / sheets
 

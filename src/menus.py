@@ -109,7 +109,13 @@ def build(w):
          w.action_pdf_delete_page, w.action_pdf_extract,
          w.action_pdf_reorder, None,
          w.action_pdf_insert_after, w.action_pdf_insert_start, None,
-         w.action_pdf_merge)
+         w.action_pdf_merge, None)
+    m_annot = m_pdf.addMenu("Annotations")
+    _add(m_annot, w.action_pdf_annot_sticky, w.action_pdf_annot_text,
+         w.action_pdf_annot_hl, w.action_pdf_annot_rect,
+         w.action_pdf_annot_circle, None,
+         w.action_pdf_annot_list, w.action_pdf_annot_del_one,
+         w.action_pdf_annot_clear)
 
     m_table = mb.addMenu("&Table")
     # Ctrl+T (action_toggle_render) is the universal "toggle render" — for CSV

@@ -1,5 +1,92 @@
 # SESSION_LOG.md
 
+## 2026-05-25 — v3.5 phase 2a: PDF annotations (dialog-driven)
+
+Shipped the annotation substrate. Phase 2b (mouse-driven annotation
+overlay UX) reuses this backend in a separate session.
+
+### `pdf_annotations.py` — PyMuPDF-backed primitives
+
+Nine annotation types + introspection + delete:
+
+- **`add_sticky_note(in, out, page, x, y, text)`** — icon pin with a
+  popup message.
+- **`add_freetext(in, out, page, rect, text, font_size, color, fill)`** —
+  text rendered directly on the page in a coloured box.
+- **`add_highlight` / `add_underline` / `add_strikeout`** over a rect
+  with caller-chosen colour. No glyph-aware snapping (that's a
+  separate effort with PDF text extraction).
+- **`add_rectangle` / `add_circle`** geometric shapes with stroke +
+  optional fill.
+- **`add_ink(in, out, page, strokes, color, width)`** — freehand ink.
+  `strokes` is a list of strokes (each a list of `(x, y)` points);
+  multiple strokes encode pen-lift between segments.
+- **`list_annotations(path)`** returns a flat list of dicts with
+  sequential `index`, `page`, `type`, `rect` (PDF points, bottom-left
+  origin), `content`. The `index` is what `delete_annotations(in,
+  out, indices)` takes; `clear_annotations(in, out, page=None)`
+  strips everything (or one page).
+- **`page_size(path, page_index)`** exposes page dimensions in PDF
+  points so a UI can map its own coordinate system. (Used by phase 2b.)
+
+PyMuPDF is lazy-imported with `PdfAnnotationError(install hint)` on
+missing dep. Every operation writes a new file — input is never
+mutated, same property as phase 1.
+
+Colour parser accepts `#rrggbb`, `#rgb`, and no-hash variants;
+rejects malformed input with `PdfAnnotationError` before invoking
+PyMuPDF (so the user gets "Bad hex color" not a PyMuPDF traceback).
+
+### `pdf_actions.py` — 8 new dialog-driven handlers
+
+`annotate_sticky_note` / `annotate_freetext` / `annotate_highlight` /
+`annotate_rectangle` / `annotate_circle` / `show_annotations_dialog` /
+`delete_annotation_dialog` / `clear_annotations_action`. Each:
+
+1. Asserts a PDF is open and reads `pdf_view.pageNavigator().currentPage()`.
+2. Prompts via `QInputDialog` for content / rect / colour (the
+   coordinate dialog is `_prompt_rect`, the colour one is
+   `_prompt_color` — both reused across handlers).
+3. Runs the operation into a sibling `*-edited.pdf`.
+4. Opens the result in a new tab via `open_file`.
+
+The clear-all handler asks for confirmation (it would silently
+strip every annotation otherwise).
+
+### Menu
+
+A new **PDF → Annotations** submenu collects all eight, sitting
+under the existing PDF menu from phase 1. No new shortcuts —
+dialog-driven flows don't benefit from keyboard accelerators.
+
+### Tests
+
+**33 new tests in `test_pdf_annotations.py`** covering the hex-colour
+parser (full / short / no-hash / malformed), `_validate_rect` (good /
+bad-size / wrong-shape), every annotation type's happy path,
+PyMuPDF's annotation `type` string survives the round-trip
+(`Highlight`, `Text`, `Square`, `Circle`, `Ink`, `FreeText`,
+`Underline`, `StrikeOut`), `list_annotations` walks every page +
+returns sequential `index`, delete-one + delete-many by index,
+clear-all + clear-one-page, and error paths (missing file,
+out-of-range page, bad rect, bad colour, empty strokes for ink).
+
+The whole module skips block-style when PyMuPDF isn't importable
+(`pytestmark = pytest.mark.skipif(...)`).
+
+End-to-end smoke verified through MainWindow: chained sticky-note →
+highlight → ink on a 2-page PDF; `list_annotations` returned all
+three with correct types (`Text`, `Highlight`, `Ink`); MainWindow
+re-opened the final result as a new tab.
+
+### Dependency
+
+`PyMuPDF>=1.24` added to `requirements.txt` (soft pin — every
+annotation handler lazy-imports). Page operations from phase 1
+need only `pypdf` which is already a hard dep.
+
+### Tests: 705 → 738 passing.
+
 ## 2026-05-25 — v3.5 phase 1: PDF page editing
 
 After the user asked "do we have the ability to add pdf editing —
