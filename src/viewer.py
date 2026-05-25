@@ -424,6 +424,7 @@ class TextViewer(QStackedWidget):
     MODE_VIDEO = "video"
     MODE_TABLE = "table"
     MODE_NOTEBOOK = "notebook"
+    MODE_ARCHIVE = "archive"
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -438,8 +439,11 @@ class TextViewer(QStackedWidget):
         self.table_view = TableView(self)
         from .notebook_view import NotebookView
         self.notebook_view = NotebookView(self)
+        from .archive_view import ArchiveView
+        self.archive_view = ArchiveView(self)
         for w in (self.code, self.rendered, self.pdf_view, self.image_view,
-                  self.web_view, self.video_view, self.table_view, self.notebook_view):
+                  self.web_view, self.video_view, self.table_view,
+                  self.notebook_view, self.archive_view):
             self.addWidget(w)
         self._mode = self.MODE_CODE
 
@@ -477,11 +481,15 @@ class TextViewer(QStackedWidget):
     def show_notebook(self):
         self.setCurrentWidget(self.notebook_view); self._mode = self.MODE_NOTEBOOK
 
+    def show_archive(self):
+        self.setCurrentWidget(self.archive_view); self._mode = self.MODE_ARCHIVE
+
     def active_widget(self):
         m = {
             self.MODE_CODE: self.code, self.MODE_RENDERED: self.rendered,
             self.MODE_PDF: self.pdf_view, self.MODE_IMAGE: self.image_view,
             self.MODE_VIDEO: self.video_view, self.MODE_TABLE: self.table_view,
             self.MODE_NOTEBOOK: self.notebook_view, self.MODE_WEB: self.web_view,
+            self.MODE_ARCHIVE: self.archive_view,
         }
         return m.get(self._mode, self.web_view)

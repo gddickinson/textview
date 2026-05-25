@@ -1,5 +1,130 @@
 # SESSION_LOG.md
 
+## 2026-05-25 — v3.4: scientific data + binary inspection
+
+Closing the remaining deferred items. Six new file-type families
+covering NumPy / MATLAB / Parquet / HDF5 / NetCDF / certificates /
+fonts, plus a real tree-view archive browser and a Markdown→DOCX
+save-as converter.
+
+### NumPy arrays (`.npy` / `.npz`)
+
+`numpy_loader.py`. Single-file `.npy` reads into a CSV-shaped table;
+multi-array `.npz` files get the standard F4 picker. 1D becomes a
+single "value" column, 2D becomes `col_0`/`col_1`/…, structured arrays
+become field-name columns, 3D+ shows a property/value summary. Always
+opens with `allow_pickle=False` — a `.npy` containing object arrays
+can't execute pickled code during load (covered by
+`test_load_blocks_pickle_arrays`).
+
+### Markdown → DOCX
+
+`docx_writer.py` renders markdown to HTML, walks the result with
+stdlib `html.parser`, and emits `python-docx` elements (headings,
+paragraphs with inline bold/italic/code/link runs, lists, code blocks,
+quotes). New `save_as.Conversion("md_to_docx", …)` so File → Save As
+`.docx` on a markdown buffer now produces a real Word document.
+Reader-side DOCX (mammoth → HTML) already existed; this closes the
+write side.
+
+### X.509 certificates + PEM keys (`.pem` / `.crt` / `.cer` / `.der` / `.key`)
+
+`cert_loader.py` renders a markdown report — subject, issuer, validity
+window, fingerprints (SHA-1 + SHA-256), Subject Alternative Names,
+public-key algorithm + size. Two backends: `cryptography` (preferred,
+rich parse) → `openssl x509 -text` CLI (fallback) → install-hint
+message if neither is available.
+
+**Private keys** (`.key`): the report includes the banner type
+(`RSA PRIVATE KEY` / `ENCRYPTED PRIVATE KEY` / …) and key size only.
+The raw key material is **never** included in the output — verified
+by `test_key_file_never_dumps_material` which plants "sensitive data"
+strings in a fake key and asserts they don't appear in the output.
+
+### Font preview (`.ttf` / `.otf` / `.woff` / `.woff2` / `.ttc` / `.otc` / `.pfb` / `.pfa`)
+
+`font_loader.py` registers the font via
+`QFontDatabase.addApplicationFontFromData`, then builds an HTML
+sample sheet — alphabet upper/lower, digits, common punctuation,
+pangram at 5 sizes, every available style with bold/italic applied,
+Greek + Cyrillic for unicode coverage, ligature/symbol test line.
+Malformed fonts yield a friendly "could not load" markdown.
+
+### Archive **tree view** (replaces the markdown TOC as the default)
+
+`archive_view.py` — `QSplitter` with a `QTreeView` of archive
+contents (Name / Size / Modified / Type columns; directories collapse
+children) on the left, a `QTextBrowser` preview pane on the right.
+Selecting a text-shaped member loads up to 1 MB into the preview;
+binary members show a short summary; double-click prompts for an
+extract destination. The markdown TOC remains available via Ctrl+T.
+
+A new `MODE_ARCHIVE` joins the viewer stack; `_refresh_view` routes
+archives to `show_archive()` by default, and `on_toggle_render` flips
+between the tree and the markdown.
+
+### MATLAB binary (`.mat`)
+
+`mat_loader.py` reads via `scipy.io.loadmat(simplify_cells=True)`.
+Variables become entries you can switch between with F4. Numeric
+arrays dispatch through the same 1D/2D/3D rules as `numpy_loader`;
+structs become field/type/value tables; cell arrays become
+index/value tables; scalars become single-row tables.
+
+### Apache Parquet / Feather (`.parquet` / `.pq` / `.feather` / `.arrow` / `.ipc`)
+
+`parquet_loader.py` uses `pyarrow`. Parquet reads through
+`iter_batches` so a billion-row file doesn't fully materialise;
+Feather uses `to_pylist()`. `file_metadata(path)` populates the
+status-bar suffix with row count + column dtypes.
+
+### HDF5 / NetCDF (`.h5` / `.hdf5` / `.he5` / `.nc` / `.nc4` / `.cdf`)
+
+`hdf5_loader.py` walks group trees and exposes a flat list of dataset
+paths (`/group/subgroup/array`) via F4. NetCDF v4 is HDF5 internally
+so we sniff magic bytes (`b"\x89HDF\r\n\x1a\n"`) and prefer `h5py`,
+falling back to `netCDF4` for older NetCDF3 classic files. Masked
+arrays get filled with their `fill_value` before serialisation.
+
+### Dependencies pinned (all optional, lazy-imported)
+
+`requirements.txt` gained `scipy`, `pyarrow`, `h5py`, `netCDF4`,
+`cryptography`. All five lazy-imported; each loader degrades with a
+friendly install-hint message when its dep is missing.
+
+### Tests
+
+- `tests/test_numpy_loader.py` — 17 tests covering 1D/2D/3D/structured
+  arrays, npy + npz, dtype preservation, pickle-array refusal,
+  file_loader integration.
+- `tests/test_cert_loader.py` — 10 tests covering supported extensions,
+  the key-material safety property, the openssl-CLI fallback, and
+  (when `cryptography` is present) a full self-signed-cert parse.
+- `tests/test_font_loader.py` — 5 tests covering extension detection,
+  malformed-font fallback, real-font rendering (probes common Mac /
+  Linux / Windows font paths and skips when none found), HTML
+  escaping in filenames, file_loader integration.
+- `tests/test_archive_view.py` — 8 tests covering the text-preview
+  helper (ZIP + TAR), the 1 MB cap, text-extension set shape,
+  widget-level model construction (`qapp` fixture), and bad-archive
+  handling.
+- `tests/test_scientific_loaders.py` — 11 tests across MATLAB,
+  Parquet, Feather, HDF5, and NetCDF. Each block is `pytest.skipif`-
+  gated for its optional dep.
+- `test_save_as.py` gained `test_md_to_docx_bytes` which round-trips
+  through `python-docx` to verify headings, inline formatting, and
+  code blocks all survive the conversion.
+
+**Full suite: 588 → 637 passing, 4 skipped** (.ods needs
+pandas+odfpy; cert tests skip when cryptography is absent, etc.).
+
+### Roadmap
+
+`ROADMAP.md` got a new "v3.4 — finish the file-lifecycle story"
+section. A "Cleared in v3.3 (2026-05-25)" entry in the parking lot
+summarises the earlier LaTeX + templates + save-as + audio + XLSX +
+SQLite + archives work.
+
 ## 2026-05-25 — Deferred items: XLSX, SQLite, archives, audio metadata
 
 After committing the lifecycle expansion, picked up the deferred

@@ -184,10 +184,14 @@ def build(w):
             from .sqlite_loader import show_table_picker; show_table_picker(w)
         elif fmt == "numpy":
             from .numpy_loader import show_array_picker; show_array_picker(w)
+        elif fmt == "mat":
+            from .mat_loader import show_variable_picker; show_variable_picker(w)
+        elif fmt == "hdf5":
+            from .hdf5_loader import show_dataset_picker; show_dataset_picker(w)
         else:
             w.statusBar().showMessage(
-                "Switch sheet/table/array: not a workbook, database, or NumPy file.", 5000)
-    w.action_switch_sheet = mk("Switch sheet / table / array…",
+                "Switch: not a workbook, database, or scientific data file.", 5000)
+    w.action_switch_sheet = mk("Switch sheet / table / array / variable…",
                                _switch_sheet_or_table, "F4")
     from .sqlite_loader import show_query_runner as _show_query_runner
     w.action_run_sql = mk("Run SQL (SQLite)…",

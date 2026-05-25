@@ -254,6 +254,20 @@ class MainWindow(QMainWindow):
                 except Exception:
                     self._numpy_arrays = []
                 self._numpy_array_index = 0
+            elif fmt == "mat":
+                from .mat_loader import list_variables
+                try:
+                    self._mat_variables = list_variables(path)
+                except Exception:
+                    self._mat_variables = []
+                self._mat_variable_index = 0
+            elif fmt == "hdf5":
+                from .hdf5_loader import list_datasets
+                try:
+                    self._hdf5_datasets = list_datasets(path)
+                except Exception:
+                    self._hdf5_datasets = []
+                self._hdf5_dataset_index = 0
         elif fmt == "notebook":
             self.viewer.notebook_view.load(path)
         elif fmt == "archive":
@@ -262,8 +276,9 @@ class MainWindow(QMainWindow):
                 self._archive_members = list_members(path)
             except Exception:
                 self._archive_members = []
-            # Content is the markdown listing — `_refresh_view` routes
-            # `archive` through the markdown renderer for the rendered view.
+            # Load into the dedicated tree view as the default; Ctrl+T
+            # flips to the markdown-TOC rendered view.
+            self.viewer.archive_view.load(path)
         elif fmt == "plain":
             from .file_inspector import maybe_unknown_file_report
             if (rep := maybe_unknown_file_report(path)) is not None: content, kind = rep; self._current_content = content; self._current_format = fmt = "markdown"; self.lbl_format.setText(f"Format: {kind}")
@@ -376,6 +391,13 @@ class MainWindow(QMainWindow):
         if fmt == "web": self.viewer.show_web(); return
         if fmt == "notebook":
             self.viewer.show_notebook(); self.lbl_format.setText("Notebook"); return
+        if fmt == "archive":
+            self.viewer.show_archive()
+            n = len(getattr(self, "_archive_members", []) or [])
+            self.lbl_format.setText(
+                f"Archive · {n} members · "
+                f"{Path(self._current_path or '').name}")
+            return
         if fmt in MEDIA_FORMATS:
             self.viewer.show_video()
             label = "Audio" if fmt in AUDIO_FORMATS else "Video"
@@ -418,6 +440,16 @@ class MainWindow(QMainWindow):
                 idx = getattr(self, "_numpy_array_index", 0)
                 if 0 <= idx < len(arrays):
                     suffix = f" · array {idx + 1}/{len(arrays)}: {arrays[idx]!r}"
+            elif fmt == "mat":
+                vars_ = getattr(self, "_mat_variables", []) or []
+                idx = getattr(self, "_mat_variable_index", 0)
+                if 0 <= idx < len(vars_):
+                    suffix = f" · variable {idx + 1}/{len(vars_)}: {vars_[idx]!r}"
+            elif fmt == "hdf5":
+                ds = getattr(self, "_hdf5_datasets", []) or []
+                idx = getattr(self, "_hdf5_dataset_index", 0)
+                if 0 <= idx < len(ds):
+                    suffix = f" · dataset {idx + 1}/{len(ds)}: {ds[idx]!r}"
             self.lbl_format.setText(
                 f"Table · {self.viewer.table_view.shape_label()} · "
                 f"sep={self._table_delimiter!r}{suffix}")
@@ -449,6 +481,15 @@ class MainWindow(QMainWindow):
     def on_toggle_render(self):
         d = self.settings_manager.display; theme = get_theme(d.theme); self._sync_content()
         if self._current_format in IMAGE_FORMATS or self._current_format in MEDIA_FORMATS or self._current_format == "notebook": return  # no source/rendered split
+        if self._current_format == "archive":
+            if self.viewer.mode() == self.viewer.MODE_ARCHIVE:
+                # Flip to markdown TOC.
+                self.viewer.rendered.setHtml(
+                    render_markdown_html(self._current_content, theme, d))
+                self.viewer.show_rendered()
+            else:
+                self.viewer.show_archive()
+            return
         if self._current_format == "latex":
             if self.viewer.mode() == self.viewer.MODE_PDF and self._pdf.doc:
                 self._populate_code_view(); self.viewer.show_code()

@@ -209,24 +209,24 @@ the wakeups self-schedule with ~30 min between fires.
 
 ---
 
-## v3.4 — finish the file-lifecycle story 🚧
+## v3.4 — finish the file-lifecycle story ✅ *(shipped 2026-05-25)*
 
 After v3.3 shipped LaTeX, templates, save-as conversion, audio playback,
-XLSX/SQLite/archive readers, this wave closes the remaining gaps. Items
-are listed in execution order — cheap & no-new-deps first, heavier
-optional-dep ones later.
+XLSX/SQLite/archive readers, this wave closed the remaining gaps. All
+eight items below shipped in one session; EPUB-write remains 🤔
+considering until real demand appears.
 
-| # | Item | Scope | Dep state | Status |
-| --- | --- | --- | --- | --- |
-| 1 | **NumPy arrays (`.npy` / `.npz`)** | small | numpy ✓ | 📅 |
-| 2 | **Markdown → DOCX** save-as converter | small | python-docx ✓ | 📅 |
-| 3 | **Certificate / key display** (`.pem`/`.crt`/`.cer`/`.key`) | small | cryptography (new) | 📅 |
-| 4 | **Parquet / Feather** as table | mid | pyarrow (new) | 📅 |
-| 5 | **Archive tree view** (replaces markdown TOC) | mid | stdlib | 📅 |
-| 6 | **Font preview** (`.ttf`/`.otf`/`.woff`/`.woff2`) | small | Qt only | 📅 |
-| 7 | **MATLAB binary** (`.mat`) | small | scipy (new) | 📅 |
-| 8 | **HDF5 / NetCDF** (`.h5`/`.hdf5`/`.nc`) | heavy | h5py / netCDF4 (new) | 📅 |
-| 9 | **EPUB write** (markdown → EPUB) | mid | ebooklib ✓ | 🤔 |
+| # | Item | Scope | Status |
+| --- | --- | --- | --- |
+| 1 | **NumPy arrays (`.npy` / `.npz`)** | small | ✅ |
+| 2 | **Markdown → DOCX** save-as converter | small | ✅ |
+| 3 | **Certificate / key display** (`.pem`/`.crt`/`.cer`/`.key`) | small | ✅ |
+| 4 | **Parquet / Feather** as table | mid | ✅ |
+| 5 | **Archive tree view** (replaces markdown TOC) | mid | ✅ |
+| 6 | **Font preview** (`.ttf`/`.otf`/`.woff`/`.woff2`) | small | ✅ |
+| 7 | **MATLAB binary** (`.mat`) | small | ✅ |
+| 8 | **HDF5 / NetCDF** (`.h5`/`.hdf5`/`.nc`) | heavy | ✅ |
+| 9 | **EPUB write** (markdown → EPUB) | mid | 🤔 |
 
 ### Detail per item
 

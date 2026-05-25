@@ -79,6 +79,14 @@ FORMAT_MAP = {
     ".sqlite": "sqlite", ".sqlite3": "sqlite", ".db": "sqlite",
     # NumPy array files — extracted to CSV like spreadsheets.
     ".npy": "numpy", ".npz": "numpy",
+    # MATLAB binary — extracted to CSV via scipy.io.
+    ".mat": "mat",
+    # Apache Parquet / Arrow Feather — extracted to CSV via pyarrow.
+    ".parquet": "parquet", ".pq": "parquet",
+    ".feather": "parquet", ".arrow": "parquet", ".ipc": "parquet",
+    # HDF5 / NetCDF hierarchical scientific data.
+    ".h5": "hdf5", ".hdf5": "hdf5", ".he5": "hdf5",
+    ".nc": "hdf5", ".nc4": "hdf5", ".cdf": "hdf5",
     # X.509 certificates + PEM keys — rendered as a markdown report.
     ".pem": "cert", ".crt": "cert", ".cer": "cert", ".der": "cert",
     ".key": "cert",
@@ -163,9 +171,9 @@ AUDIO_FORMATS = {"audio"}
 # Media that go through QMediaPlayer rather than the text pipeline.
 MEDIA_FORMATS = VIDEO_FORMATS | AUDIO_FORMATS
 # Formats that get the TableView treatment (filter bar, sorting, derived
-# columns). `xlsx`, `sqlite`, `numpy` are extracted to CSV text under the
-# hood so this stays cohesive — see the respective `*_loader.py` modules.
-TABLE_FORMATS = {"csv", "xlsx", "sqlite", "numpy"}
+# columns). All non-CSV members are extracted to CSV text under the hood
+# so this stays cohesive — see the respective `*_loader.py` modules.
+TABLE_FORMATS = {"csv", "xlsx", "sqlite", "numpy", "mat", "parquet", "hdf5"}
 
 ENCODINGS_TO_TRY = ["utf-8", "utf-8-sig", "utf-16", "latin-1", "cp1252"]
 
@@ -270,6 +278,7 @@ def file_dialog_filter() -> str:
         "Spreadsheets (*.xlsx *.xlsm *.xltx *.xltm *.xls *.ods)",
         "SQLite databases (*.sqlite *.sqlite3 *.db)",
         "NumPy arrays (*.npy *.npz)",
+        "MATLAB / Parquet / HDF5 (*.mat *.parquet *.feather *.arrow *.h5 *.hdf5 *.nc *.nc4)",
         "Certificates / keys (*.pem *.crt *.cer *.der *.key)",
         "Fonts (*.ttf *.otf *.woff *.woff2 *.ttc *.otc *.pfb *.pfa)",
         "Archives (*.zip *.tar *.tar.gz *.tgz *.tar.bz2 *.tbz2 *.tar.xz *.txz *.7z *.jar *.war *.apk)",
@@ -389,6 +398,34 @@ def load_file(path):
         from .font_loader import load_and_render
         html = load_and_render(str(p))
         return html, "font sample", fmt
+
+    if fmt == "mat":
+        from .mat_loader import list_variables, load_variable_as_csv
+        names = list_variables(str(p))
+        first = names[0] if names else None
+        if first is None:
+            return "", f"mat · (no variables)", fmt
+        csv_text = load_variable_as_csv(str(p), first)
+        return csv_text, f"mat · variable={first}", fmt
+
+    if fmt == "parquet":
+        from .parquet_loader import read_as_csv, file_metadata
+        csv_text = read_as_csv(str(p))
+        try:
+            meta = file_metadata(str(p))
+            label = f"{p.suffix.lstrip('.')} · {meta['rows']:,} rows × {len(meta['columns'])} cols"
+        except Exception:
+            label = f"{p.suffix.lstrip('.')}"
+        return csv_text, label, fmt
+
+    if fmt == "hdf5":
+        from .hdf5_loader import list_datasets, load_dataset_as_csv
+        names = list_datasets(str(p))
+        first = names[0] if names else None
+        if first is None:
+            return "", f"hdf5 · (no datasets)", fmt
+        csv_text = load_dataset_as_csv(str(p), first)
+        return csv_text, f"{p.suffix.lstrip('.')} · dataset={first}", fmt
 
     text, encoding = _read_text(str(p))
     return text, encoding, fmt

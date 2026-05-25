@@ -78,6 +78,7 @@ def test_pygments_can_resolve_every_format():
     skip = {"image", "video", "audio", "notebook",
             "pdf", "docx", "rtf", "epub", "odt",
             "plain", "csv", "xlsx", "sqlite",     # extracted to CSV
+            "mat", "parquet", "hdf5",             # also extracted to CSV
             "archive", "cert",                    # rendered as markdown
             "font"}                               # rendered as HTML
     for fmt in formats - skip:
