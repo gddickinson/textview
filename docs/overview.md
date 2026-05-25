@@ -1,16 +1,23 @@
 # Overview
 
 TextView is a PyQt6 desktop app that opens almost any file you'd
-encounter on a developer's machine and shows it the right way: code in a
-syntax-highlighted editor, markdown rendered, PDFs paginated, images
-zoomable, CSVs as a sortable spreadsheet, notebooks as runnable cells,
-unknown formats identified by magic bytes. It also edits and saves
-most of those formats, runs scripts in 30+ languages, talks to
-language servers, embeds a Jupyter kernel, and exposes everything
-through an LLM chat panel (with workspace RAG + multimodal input) and
-an external control socket. A layered security pipeline scans every
-file before opening; quarantine + optional `clamscan` / sandboxing
-provide further depth.
+encounter on a developer's or scientist's machine and shows it the
+right way: code in a syntax-highlighted editor, markdown rendered, PDFs
+paginated, **LaTeX compiled to PDF on demand**, images zoomable, CSVs
+as a sortable spreadsheet, **Excel / SQLite / archives / NumPy /
+MATLAB / Parquet / HDF5 / NetCDF all extracted to the same table
+view**, **certificates decoded** to a markdown report, **fonts
+previewed** at multiple sizes, notebooks as runnable cells, video and
+**audio** through a shared transport bar, unknown formats identified
+by magic bytes. It also edits and saves most of those formats with
+**format-aware Save As** (markdown → DOCX, JSON ↔ YAML ↔ TOML, CSV →
+JSON/XLSX/Markdown, …) and a **template library** (Ctrl+Alt+N) for
+starting new files. Runs scripts in 30+ languages, talks to language
+servers, embeds a Jupyter kernel, and exposes everything through an
+LLM chat panel (with workspace RAG + multimodal input + first-class
+tools for every supported format) and an external control socket.
+A layered security pipeline scans every file before opening;
+quarantine + optional `clamscan` / sandboxing provide further depth.
 
 ## What's on the screen
 
@@ -60,11 +67,12 @@ The viewer is a stack widget. Only one mode is shown at a time.
 | Mode | Used for |
 | --- | --- |
 | `code` | text/code/data formats with syntax highlighting + line numbers |
-| `rendered` | markdown / HTML / DOCX / EPUB / ODT — visual rendering |
-| `pdf` | native PDF rendering with text selection + search |
+| `rendered` | markdown / HTML / DOCX / EPUB / ODT, **certificate reports, font sample sheets**, archive markdown TOCs — visual rendering |
+| `pdf` | native PDF rendering with text selection + search; also where compiled LaTeX lands |
 | `image` | image viewer with zoom / rotate / multi-frame nav / histogram |
-| `video` | video playback with transport controls |
-| `table` | CSV/TSV spreadsheet with sort / filter / charts |
+| `video` | video AND audio playback with shared transport bar (audio uses a "♪ filename" overlay) |
+| `table` | shared by CSV / TSV / XLSX / ODS / SQLite / NumPy / MATLAB / Parquet / Feather / HDF5 / NetCDF — sort / filter / charts work for all |
+| `archive` | tree view of ZIP / TAR / 7z members with a text-preview pane (Ctrl+T flips to markdown TOC) |
 | `notebook` | Jupyter `.ipynb` viewer + editor + runner |
 | `web` | embedded Chromium for URLs and HTML |
 
@@ -102,6 +110,12 @@ separately). Tool surface includes:
 - `analyze_file`, `register_format_handler`, `create_plugin`,
   `install_package`, `web_search` — the unknown-file workflow.
 - `read_doc`, `search_docs`, `list_docs` — query this very docs folder.
+- **Data-format introspection** (added in v3.4): `read_spreadsheet`
+  (XLSX / ODS), `read_sqlite` + `query_sqlite`, `read_archive`,
+  `read_array_file` (NumPy / MATLAB), `read_parquet`, `read_hdf5`,
+  `read_cert` — each returns a schema overview + truncated preview,
+  so the agent can answer "what's in this Parquet?" without burning
+  context on a 50-million-row dataset.
 - File / tab / editor / table operations — get_text, set_text, save,
   goto_line, apply_table_filter, sort_table, make_chart, …
 

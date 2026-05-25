@@ -18,6 +18,7 @@ canonical reference.
 | Ctrl+W | Close current tab |
 | Ctrl+Alt+Shift+W | Close all tabs |
 | Ctrl+N | New tab (welcome) |
+| Ctrl+Alt+N | **New from template…** (Markdown / Python / LaTeX / Dockerfile / …) |
 | Ctrl+Shift+N | New window |
 | Ctrl+Q | Quit |
 
@@ -61,10 +62,19 @@ canonical reference.
 | F5 | Run current file (interpreter from format) |
 | Ctrl+Enter | Run selection |
 | Ctrl+. | Stop run |
+| F6 | **Compile LaTeX → PDF** (auto-picks `xelatex` for fontspec docs) |
 | F7 | Run a saved script (picker) |
 | Ctrl+Shift+Y | Open Python REPL |
 | Ctrl+Alt+R | Notebook: run all cells |
 | Ctrl+Alt+↑ / ↓ | Notebook: move cell up / down |
+
+## Tables / data / sheets
+
+| Shortcut | Action |
+| --- | --- |
+| F4 | **Switch sheet / table / array / variable / dataset…** — dispatches on active format (XLSX / SQLite / NumPy / MATLAB / HDF5) |
+| Ctrl+Shift+Q | **Run SQL…** (SQLite, read-only) |
+| Ctrl+Shift+E | Spreadsheet panel (selection stats, edit toggle, charts) |
 
 ## LSP
 

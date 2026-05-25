@@ -1,5 +1,104 @@
 # SESSION_LOG.md
 
+## 2026-05-25 — v3.4 polish: docs refresh + agent tools + UX harness + Origin probe
+
+After v3.4 shipped the eight new file-type families, this follow-up
+session targets the three recommended polish items:
+
+### 1. LLM tool surface for every new format
+
+`src/llm/tools_data_formats.py` — eight new read-only tools registered
+in `READ_ONLY_TOOLS`. The agent can now answer questions like "what's
+in this Parquet?", "summarise the people table in this SQLite DB",
+"list the datasets in that HDF5" without the user opening the file
+first. Each tool returns a schema overview + 20-row CSV preview;
+larger files are deliberately truncated so a 50-million-row dataset
+never burns the agent's context window. Private-key safety from
+`cert_loader` carries through (covered by
+`test_read_cert_safe_for_keys`).
+
+20 tests in `tests/test_tools_data_formats.py` covering registry
+shape, read-only-registry membership, every tool's happy path, and
+error paths (missing files, unknown sheets/datasets, read-only
+enforcement on `query_sqlite`).
+
+### 2. Doc refresh
+
+`docs/file-formats.md` rewritten — now organises by domain (Text,
+Data, Workbooks/databases/archives, Scientific data, Code,
+Documents, Images, Video & audio, Certificates, Fonts, Subtitles
+/ email / cal, Notebook, Web). Adds a "Save As with format
+conversion" section and a "New from template…" section. Same file
+is also what the `DOC_TOOLS` agent tool reads, so this upgrade hits
+both users and the LLM in one move.
+
+`docs/overview.md` updated: the elevator pitch paragraph now
+mentions LaTeX, audio, XLSX/SQLite/archives, scientific data,
+templates, save-as conversion, and the new agent data-tools. The
+modes table picks up `archive`, mentions the table view is shared
+across CSV/XLSX/SQLite/NumPy/MATLAB/Parquet/HDF5, and notes that
+video mode also handles audio.
+
+`docs/shortcuts.md` adds **Ctrl+Alt+N** (new from template),
+**F4** (switch sheet/table/array/variable/dataset), **F6** (compile
+LaTeX), **Ctrl+Shift+Q** (run SQL).
+
+`src/welcome.py` rewritten with the new capability list, an "AI
+workspace" section that calls out the data-format tools, and a
+"Save As with format conversion" mention.
+
+### 3. Screenshot matrix harness (`tools/snapshot_matrix.py`)
+
+A modest version of roadmap item I.3. Self-contained — builds its
+own fixtures (XLSX, SQLite, ZIP, NPY/NPZ, Parquet, HDF5, optional
+self-signed cert) so any checkout can run it without curated
+sample files. Boots `MainWindow` headlessly, opens each fixture,
+captures a PNG of the active viewer widget, writes a `manifest.csv`.
+
+Defaults to `screenshots_matrix/` (overrideable with `--out`).
+`--theme` forces a theme so the harness can be re-run for each
+of the ten themes; `--keep-fixtures` preserves the temp dir.
+
+End-to-end verified: **14 of 15 cases captured** on a fresh run
+(`cert` skips when `cryptography` isn't installed, matching the
+test-side skip behaviour). Both the archive tree view and the
+HDF5 dataset table render correctly in the captured PNGs.
+
+One bug surfaced + fixed during the run: a fresh `.xlsx` fixture
+triggers the security scanner's office-macro warning even though
+the workbook has no macros, causing a modal `QMessageBox` to block
+the headless capture forever. The harness now disables
+`security_scan_on_open` for the duration; the real fix on the
+scanner side is a follow-up.
+
+### 4. OriginLab `.opj` / `.opju` investigation
+
+Background research agent dispatched. Bottom line: **no
+cross-platform, pip-installable, maintained Python reader for OPJU
+exists in 2026.** Options surveyed:
+
+- `originpro` (PyPI, official) — Windows-only, requires installed
+  Origin licence + COM automation.
+- `liborigin` (C++ at SourceForge / SciDAVis on GitHub) —
+  `brew install liborigin` provides an `opj2dat` CLI but **does
+  not support OPJU**, and the only Python binding
+  (`Saluev/python-liborigin2`) isn't on PyPI and needs manual
+  Cython build.
+- `pyorigin` (PyPI 0.0.1) — unrelated package, despite the name.
+- `convert-opju` (Zenodo, 2025) and `Orglab` — Windows + Origin
+  required.
+- R `Ropj` — OPJ only, no OPJU, R-only.
+
+**Decision**: don't ship a half-broken reader. Instead, added an
+`originlab` entry to `data/file_formats.json` so the format DB
+explicitly tells users "open in Origin or the free Origin Viewer
+and export CSV/XLSX — TextView reads those natively." If a future
+liborigin release adds OPJU support, the natural follow-up is to
+shell out to `opj2dat` when present (mirroring how `tesseract` /
+`clamscan` are handled).
+
+Tests: 637 → 657 passing (new test_tools_data_formats.py).
+
 ## 2026-05-25 — v3.4: scientific data + binary inspection
 
 Closing the remaining deferred items. Six new file-type families

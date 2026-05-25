@@ -553,6 +553,23 @@
       "binary": false,
       "description": "Build script for `make`. Each rule has a target, prerequisites, and a recipe (tab-indented commands). GNU make extends POSIX make with pattern rules, functions, and variable expansion.",
       "tags": ["build", "automation"]
+    },
+    {
+      "id": "originlab",
+      "name": "OriginLab project / data",
+      "extensions": [".opj", ".opju", ".ogw", ".ogwu", ".ogm", ".ogmu", ".ogg", ".oggu"],
+      "category": "scientific",
+      "binary": true,
+      "description": "Proprietary binary container format from OriginLab (Origin / OriginPro). Houses worksheets, graphs, matrices, layouts, and analysis history. `.opj` is the pre-2018 format; `.opju` (Unicode) is the format Origin has shipped since 2018 — most files encountered today are .opju. The Unicode container is **not** supported by any open-source reader as of 2026.",
+      "use_cases": ["Materials science", "Life sciences", "Chemistry data analysis"],
+      "tools": [
+        {"name": "Origin / OriginPro (commercial)", "kind": "app", "url": "https://www.originlab.com/"},
+        {"name": "Free Origin Viewer (Windows-only)", "kind": "app", "url": "https://www.originlab.com/viewer/"},
+        {"name": "liborigin (Homebrew) → `opj2dat` CLI — OPJ only, no OPJU", "kind": "cli", "url": "https://formulae.brew.sh/formula/liborigin"},
+        {"name": "originpro Python module (Windows + Origin licence required)", "kind": "lib", "url": "https://pypi.org/project/originpro/"}
+      ],
+      "open_with": "TextView does **not** read .opj/.opju directly. No cross-platform, pip-installable Python reader exists for OPJU; OPJ has a Homebrew `liborigin` CLI but its third-party Python wrapper isn't on PyPI. Workaround: open the file in Origin (or the free Origin Viewer on Windows) and export the worksheet as CSV / XLSX — TextView reads those natively.",
+      "tags": ["proprietary", "scientific", "unsupported-read"]
     }
   ]
 }

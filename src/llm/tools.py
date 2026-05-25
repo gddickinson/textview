@@ -17,6 +17,7 @@ from .tools_workspace import WORKSPACE_TOOLS
 from .tools_inspect import INSPECT_TOOLS_RO, INSPECT_TOOLS_ACTION
 from .tools_format_db import FORMAT_DB_TOOLS_RO, FORMAT_DB_TOOLS_ACTION
 from .tools_security import SECURITY_TOOLS_RO, SECURITY_TOOLS_ACTION
+from .tools_data_formats import DATA_FORMAT_TOOLS
 
 
 # -- read-only implementations ------------------------------------------------
@@ -253,6 +254,7 @@ READ_ONLY_TOOLS: list[Tool] = [
     *INSPECT_TOOLS_RO,
     *FORMAT_DB_TOOLS_RO,
     *SECURITY_TOOLS_RO,
+    *DATA_FORMAT_TOOLS,
 ]
 
 
