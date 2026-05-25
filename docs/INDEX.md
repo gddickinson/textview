@@ -1,12 +1,20 @@
 # TextView documentation
 
 A modular PyQt6 GUI for viewing, editing, and analyzing text, code,
-markup, document, image, video, table, and notebook files — with live
-display configuration, syntax highlighting, LSP integration, an
-embedded Jupyter notebook + REPL, an AI agent with workspace RAG +
-multimodal chat, an extensible file-format database, layered
-file-loading security (scan / quarantine / sandbox), and a 447-test
-regression suite running in CI.
+markup, document, **LaTeX** (with on-demand PDF compile), image,
+video, **audio**, table, **spreadsheet / SQLite / archive / NumPy /
+MATLAB / Parquet / HDF5**, **certificate / font**, and notebook
+files. **Save As** offers format-aware conversion (Markdown ↔ HTML,
+JSON ↔ YAML ↔ TOML, CSV → JSON / XLSX / Markdown, Markdown → DOCX,
+…). **PDF editing** covers pages (rotate / delete / merge / split),
+annotations (sticky / highlight / shapes / ink — dialog or mouse),
+text-span replacement + find-and-replace, **cryptographic signing**
+(PAdES via pyHanko), and round-trip via Markdown / DOCX. Live display
+configuration, syntax highlighting, LSP integration, an embedded
+Jupyter notebook + REPL, an AI agent with workspace RAG + multimodal
+chat + first-class data-format tools, an extensible file-format
+database, layered file-loading security (scan / quarantine /
+sandbox), and **826 regression tests** running in CI.
 
 ## For users
 

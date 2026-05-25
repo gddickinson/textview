@@ -1,5 +1,37 @@
 # SESSION_LOG.md
 
+## 2026-05-25 — Doc refresh after v3.5 complete
+
+Audited every doc for stale references to feature lists / test
+counts / module counts before moving on to the 3D-files follow-up.
+
+Updated:
+
+- **`README.md`** — elevator pitch now lists LaTeX, audio, Excel /
+  SQLite / archives, scientific data, certificates / fonts, the
+  five-tier PDF editing surface, and the format-aware Save As.
+  Test count badge bumped 447 → 826. Key-shortcuts table gains
+  Ctrl+Alt+N, F4, F6, Ctrl+]/Ctrl+[, Ctrl+Shift+Q.
+- **`docs/INDEX.md`** — top paragraph rewritten to reflect v3.3 /
+  v3.4 / v3.5 capabilities + the 826 test count.
+- **`docs/architecture.md`** — TextViewer tree shows the
+  `ArchiveView` member and notes which TableView formats it serves;
+  controllers section adds `LatexController`. Two new "Format
+  loaders" + "PDF editing pipeline" overview blocks. Test-count
+  bumped 447 → 826; module count 60+ → 95+.
+- **`docs/agent-api.md`** — new "Structured-data formats (v3.4)"
+  section in read-only tools listing the eight data-format tools
+  (`read_spreadsheet`, `read_sqlite`, `query_sqlite`,
+  `read_archive`, `read_array_file`, `read_parquet`, `read_hdf5`,
+  `read_cert`), so the chat agent's own context document is in
+  sync with what it can actually call.
+
+Per-domain pages (file-formats / overview / shortcuts) were already
+current — last refreshed in the v3.5 phase 2b commit and the
+v3.5 tier-3 / tier-4-5 commits.
+
+No code changes. Tests still 826 passing.
+
 ## 2026-05-25 — v3.5 tiers 4 + 5: cryptographic signing + PDF reconstruction
 
 User asked me to look into cryptographic signing AND alternative

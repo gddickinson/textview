@@ -25,6 +25,20 @@ tool-calling — there's a system-prompt nudge that helps).
   / Q1/Q3 / skew / kurtosis for numeric columns; uniqueness for strings.
 - `correlation_matrix()` — pairwise Pearson on every numeric column.
 
+### Structured-data formats (v3.4)
+The agent has first-class tools for every binary table-shaped format
+TextView reads. Each returns a schema overview + 20-row CSV preview
+(deliberately truncated so a 50M-row dataset doesn't burn context).
+- `read_spreadsheet(path, sheet?)` — XLSX / ODS / XLS, multi-sheet.
+- `read_sqlite(path)` — schema overview (tables + columns + row counts).
+- `query_sqlite(path, sql)` — ad-hoc SELECT, read-only enforced.
+- `read_archive(path)` — ZIP / TAR / 7z member listing.
+- `read_array_file(path, name?)` — NumPy `.npy` / `.npz` + MATLAB `.mat`.
+- `read_parquet(path)` — Parquet / Feather.
+- `read_hdf5(path, dataset?)` — HDF5 / NetCDF, group tree flattened.
+- `read_cert(path)` — X.509 certificate or PEM key metadata. **Never
+  displays raw private-key material.**
+
 ### Documentation (this set!)
 - `list_docs()` — every documentation page with a one-line description.
 - `read_doc(name)` — full markdown of a doc page (e.g. `"file-formats"`).

@@ -6,14 +6,22 @@
 ![PyQt](https://img.shields.io/badge/PyQt-6-41cd52)
 ![license](https://img.shields.io/badge/license-private-lightgrey)
 
-**A modular PyQt6 file viewer with an AI agent that knows your workspace.**
+**A modular PyQt6 file viewer + lightweight editor with an AI agent
+that knows your workspace.**
 
-Open anything — code, markdown, PDF, DOCX, Jupyter notebooks, CSVs,
-images, video — with live theming, syntax highlighting, and LSP
-integration. Then talk to a chat agent that has tool access to your
-files: it builds a workspace index, returns answers with clickable
-citations, and (with explicit opt-in) can install packages and write
-plugins to teach the app new file formats.
+Open anything — code in 60+ languages, markdown, **LaTeX** (with
+on-demand PDF compile), PDF, DOCX, Jupyter notebooks, CSVs, **Excel
+/ OpenDocument / SQLite / archives** (zip/tar/7z), **scientific data**
+(NumPy, MATLAB, Parquet, HDF5, NetCDF), **certificates, fonts**,
+images, **video AND audio** — with live theming, syntax highlighting,
+LSP integration, and an embedded Jupyter kernel. **Save As is
+format-aware** — Markdown → DOCX, JSON ↔ YAML ↔ TOML, CSV → JSON/XLSX,
+and more. **Edit PDFs**: rotate / delete / extract / merge / split
+pages, add highlights and annotations (dialog or mouse-driven),
+replace text spans, find-and-replace, **cryptographically sign**
+(PAdES via pyHanko), or **round-trip via Markdown / DOCX** for
+free-form edits. Then talk to a chat agent with first-class tools
+for every supported format.
 
 ![AI workspace: citations panel, code viewer, and chat exchange](docs/screenshots/02_ai_workspace.png)
 
@@ -35,10 +43,32 @@ plugins to teach the app new file formats.
   — each gated by a separate per-tool safety flag. → [`docs/unknown-files.md`](docs/unknown-files.md)
 - **Multimodal chat.** Drop images directly into the chat input — they
   go to the model as Anthropic-shape image content blocks. → [`docs/chat.md`](docs/chat.md)
-- **Many formats, one window.** Text, code, markdown, JSON / YAML /
-  TOML, CSV / TSV (sortable table mode with stats and chart picker),
-  PDF, DOCX / RTF / EPUB / ODT, images (incl. animated WebP / TIFF /
-  GIF), video, Jupyter notebooks. → [`docs/file-formats.md`](docs/file-formats.md)
+- **Many formats, one window.** Text, code (~60 languages), markdown,
+  **LaTeX**, JSON / YAML / TOML / TSV / NDJSON / GeoJSON, CSV (sortable
+  table mode with stats and chart picker), **XLSX / ODS / SQLite /
+  archives** (zip/tar/7z) all share the table view via F4 sheet/table
+  switcher; **NumPy / MATLAB / Parquet / Feather / HDF5 / NetCDF** for
+  scientific data; PDF, DOCX / RTF / EPUB / ODT, images (incl.
+  animated WebP / TIFF / GIF), video + **audio with ID3 metadata**,
+  Jupyter notebooks, **certificates** (.pem/.crt/.cer/.key), **fonts**
+  (.ttf/.otf/.woff/.woff2). → [`docs/file-formats.md`](docs/file-formats.md)
+- **PDF editing as first-class** (v3.5 — five tiers).
+  Pages: rotate / delete / extract / reorder / insert blank /
+  merge / split. Annotations: sticky / free-text / highlight /
+  underline / strikeout / rectangle / circle / ink — dialog or
+  mouse-driven. Text: span replacement + find-and-replace + click-
+  to-edit. **Cryptographic signing** with PAdES + optional TSA
+  timestamps; verification with cert-chain + tamper detection.
+  **Edit via round-trip**: convert PDF → Markdown / DOCX, edit,
+  re-export through the existing Save As pipelines. Source PDF is
+  never mutated — every operation writes a new file. →
+  [`docs/file-formats.md`](docs/file-formats.md)
+- **Templates + format-aware Save As.** **New from template…**
+  (Ctrl+Alt+N) with ~25 starter files (README, LaTeX article,
+  Python script, Dockerfile, …). **Save As** offers conversion when
+  the chosen extension implies a different format — Markdown →
+  DOCX, JSON ↔ YAML ↔ TOML, CSV → JSON/JSONL/XLSX/Markdown/HTML.
+  After save the file re-opens so view-mode flips correctly.
 - **Built-in format reference.** A curated database of 40+ file
   formats — descriptions, magic bytes, tools, how-to-open / convert
   notes — searchable from **Help → File formats database… (Ctrl+Shift+B)**.
@@ -62,8 +92,8 @@ plugins to teach the app new file formats.
   display option is reactive. 10 built-in palettes (Dracula, Nord,
   Solarized, Sepia, …) switch without restart.
 - **Modular by construction.** Every source file under 500 lines, one
-  concern each, 447-test regression suite running in CI in under
-  10 seconds. → [`INTERFACE.md`](INTERFACE.md), [`docs/architecture.md`](docs/architecture.md)
+  concern each, **826-test regression suite** running in under 15
+  seconds. → [`INTERFACE.md`](INTERFACE.md), [`docs/architecture.md`](docs/architecture.md)
 
 ## Quick start
 
@@ -142,15 +172,15 @@ responsibility is one row in a table there.
 ## Tests + CI
 
 ```bash
-python -m pytest                  # full (~10s, 447 cases)
+python -m pytest                  # full (~15s, 826 cases)
 python -m pytest -m "not slow"    # CI subset (skips Jupyter subprocess tests)
 python -m pytest tests/test_X.py  # one file
 ```
 
-GitHub Actions runs the fast subset (438 / 447 cases) on every push
-and pull request via [`tests.yml`](.github/workflows/tests.yml). The
-README's `last commit` badge is auto-bumped by the same workflow on
-every green push to `main`.
+GitHub Actions runs the fast subset on every push and pull request
+via [`tests.yml`](.github/workflows/tests.yml). The README's
+`last commit` badge is auto-bumped by the same workflow on every
+green push to `main`.
 
 ## Key shortcuts
 
@@ -158,6 +188,7 @@ every green push to `main`.
 | --- | --- |
 | `Ctrl+P` | Quick open file (fuzzy) |
 | `Ctrl+K` | Command palette (every action) |
+| `Ctrl+Alt+N` | **New from template…** (Markdown / Python / LaTeX / …) |
 | `Ctrl+Shift+F` | Find in project |
 | `Ctrl+F` | Find / replace (regex toggle) |
 | `Ctrl+J` | Chat panel |
@@ -165,7 +196,11 @@ every green push to `main`.
 | `Ctrl+I` | Metadata panel |
 | `Ctrl+\`` | Terminal (PTY-backed) |
 | `Ctrl+Alt+J` | Jupyter qtconsole |
+| `F4` | **Switch sheet / table / array / variable / dataset…** |
 | `F5` | Run current file (notebook: run cell) |
+| `F6` | **Compile LaTeX → PDF** |
+| `Ctrl+]` / `Ctrl+[` | **Rotate current PDF page** CW / CCW |
+| `Ctrl+Shift+Q` | **Run SQL** on the open SQLite |
 | `Alt+/` | LLM inline completion |
 | `F2` | Go to definition (LSP) |
 | `Shift+F12` | Find references (LSP) |
