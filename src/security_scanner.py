@@ -268,14 +268,31 @@ def scan_file(path, *, run_clamav: bool = False, head_bytes: int = 65536,
     # 3. Extension vs detected-kind mismatch.
     if info is not None and info.detected_kind:
         # Map common kinds to expected extensions for the catch.
+        # NB: kind=zip covers a lot of well-known zip containers — Office
+        # XML formats (xlsx/docx/pptx + macro/template variants), Java /
+        # Android / iOS packages, eBooks, and Origin's `.ogm`/`.ogw` — so
+        # we whitelist them rather than flag every encounter as
+        # "extension mismatch".
         expected = {
             "pdf": (".pdf",), "png": (".png",), "jpeg": (".jpg", ".jpeg"),
-            "gif": (".gif",), "zip": (".zip",), "elf": (".elf", ".so", ".out"),
+            "gif": (".gif",), "elf": (".elf", ".so", ".out"),
+            "zip": (
+                ".zip",
+                # Office Open XML (Word / Excel / PowerPoint)
+                ".docx", ".docm", ".dotx", ".dotm",
+                ".xlsx", ".xlsm", ".xltx", ".xltm",
+                ".pptx", ".pptm", ".potx", ".potm", ".ppsx", ".ppsm",
+                # OpenDocument
+                ".odt", ".ods", ".odp", ".odg", ".odf",
+                # eBook / Java / Android / iOS / installer packages
+                ".epub", ".jar", ".war", ".ear", ".apk", ".aab",
+                ".ipa", ".xpi", ".crx", ".whl",
+            ),
             "macho": ("",),  # mach-o has no fixed ext
             "pe": (".exe", ".dll", ".sys", ".scr"),
             "parquet": (".parquet", ".pq"),
             "sqlite": (".sqlite", ".sqlite3", ".db", ".db3"),
-            "hdf5": (".h5", ".hdf5"),
+            "hdf5": (".h5", ".hdf5", ".he5", ".nc", ".nc4"),
         }
         expected_exts = expected.get(info.detected_kind, ())
         # Note: only fire mismatch for binary kinds + non-empty expected list.

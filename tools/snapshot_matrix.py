@@ -289,14 +289,13 @@ def main() -> int:
             print(f"WARN: could not set theme {args.theme!r}: {e}",
                   file=sys.stderr)
 
-    # Disable security scan + LaTeX message bridge — both can pop modal
-    # dialogs that block forever in headless mode. The scanner sometimes
-    # flags fresh xlsx fixtures as "warning" (zip-shaped office docs);
-    # that prompt is not what we're snapshotting.
-    try:
-        window.settings_manager.update("security_scan_on_open", False)
-    except Exception:
-        pass
+    # Disconnect the LaTeX QMessageBox bridge — headless QMessageBox
+    # would block. (LaTeX compile isn't part of the matrix anyway, but
+    # we leave the file open in code view so it doesn't matter.) The
+    # security scanner used to false-positive on clean .xlsx files
+    # because the extension-mismatch check listed only `.zip` as a
+    # valid extension for kind=zip — fixed in security_scanner.py, so
+    # we no longer need to disable the whole scanner here.
     try: window._latex.finished.disconnect(window._on_latex_finished)
     except TypeError: pass
 

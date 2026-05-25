@@ -42,6 +42,23 @@ def test_renamed_pdf_is_actually_zip_flagged(tmp_path):
     assert "extension_mismatch" in cats
 
 
+@pytest.mark.parametrize("name", [
+    "ok.xlsx", "ok.docx", "ok.pptx",
+    "ok.epub", "ok.jar", "ok.apk", "ok.odt", "ok.ods",
+])
+def test_zip_based_office_packages_dont_false_positive(tmp_path, name):
+    """A plain zip with a known office / package extension must NOT be
+    flagged as extension_mismatch — these formats are all PK-headed.
+    Regression: the snapshot_matrix harness hung on a clean .xlsx
+    because the scanner used to fire here."""
+    p = tmp_path / name
+    with zipfile.ZipFile(p, "w") as z: z.writestr("dummy.txt", "x")
+    sr = scan_file(p)
+    cats = {f.category for f in sr.findings}
+    assert "extension_mismatch" not in cats, \
+        f"{name} false-positively flagged: {[(f.severity, f.category) for f in sr.findings]}"
+
+
 # ---- scanner: VBA macro detection ---------------------------------------
 
 def test_vba_macro_in_docx_warned(tmp_path):

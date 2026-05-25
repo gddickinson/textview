@@ -153,3 +153,71 @@ overlaps; for that purpose 1280px is fine. Future passes can run at
   the title; double-check it's noticeable.
 
 Run `python3 -m src.ux_screenshots <out_dir>` to regenerate.
+
+---
+
+## 2026-05-25 follow-up pass — `tools/snapshot_matrix.py`
+
+A more self-contained harness lives at `tools/snapshot_matrix.py`. It
+builds its own fixtures (XLSX, SQLite, ZIP, NPY/NPZ, Parquet, HDF5,
+font, optional cert), so any checkout can run the matrix without a
+curated samples folder. Default output: `screenshots_matrix/`,
+overrideable with `--out`. The `--theme` flag re-runs the matrix in
+any of the ten themes for theme-drift checks.
+
+15 cases, 14 captured on a clean run (cert skips when `cryptography`
+isn't installed).
+
+### F4 — Table row-number gutter ignores theme (still open)
+
+**Symptom**: switch to **Light** theme, open any table-shaped file
+(`.csv`, `.xlsx`, `.sqlite`, `.npy`, `.parquet`, `.h5`). The cells
+themselves render with light backgrounds correctly, but the leftmost
+**row-number column** stays dark navy — the colour the row-number
+gutter uses in dark themes.
+
+Visible in `/tmp/textview_ux_light/hdf5.png`, `xlsx.png`, `sqlite.png`,
+`npy.png`, `parquet.png`. The dark-theme run (`/tmp/textview_ux/`)
+looks correct — gutter blends in.
+
+**Likely cause**: the table view's vertical-header section keeps the
+default palette from the previous theme. `view_styler.apply_table`
+sets a row-number colour but doesn't push it onto the vertical
+header's `QPalette.Window` role.
+
+**Fix candidate**: in `src/view_styler.py::apply_table`, push
+`theme["table_row_number_bg"]` (or fall back to `theme["bg"]`) into
+the vertical header's palette `Window` role, mirroring what
+F1 already does for the data area.
+
+Open — to be fixed in a follow-up.
+
+### F5 — Audio panel uses hardcoded dark colours
+
+**Symptom**: VideoView's audio-only panel (the `♪ filename` overlay
+for `.mp3` / `.flac` / etc.) is styled with hard-coded
+`background:#1e1e1e; color:#eee` in `src/video_view.py:_audio_panel`.
+On Light theme this is a jarring dark rectangle in an otherwise-light
+app.
+
+Not in the matrix output because the matrix doesn't load audio files
+(no fixture), but the visual issue is obvious by inspection.
+
+**Fix candidate**: route the audio panel's background through the
+active theme — use `theme["bg"]` / `theme["fg"]` from `apply_all`.
+
+Open — to be fixed in a follow-up.
+
+### F6 — Archive tree view in Light theme uses default palette (OK)
+
+**Verified clean**. The Qt `QTreeView` we use for the archive tree
+respects the OS palette out of the box; Light theme produces a
+readable white-on-dark-text table, Dark theme produces the inverse.
+No fix needed.
+
+### F7 — Font sample sheet themed via QTextBrowser (OK)
+
+**Verified clean**. The HTML sample-sheet output goes through the
+themed `QTextBrowser` in `_refresh_view`, which picks up
+`render_markdown_html`'s theme-aware CSS. Fonts render correctly
+against both Light and Dark backgrounds.
