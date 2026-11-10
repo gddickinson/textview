@@ -213,5 +213,5 @@ qtconsole, and notebook kernel auto-start.
 
 ## License
 
-Private — see [`SESSION_LOG.md`](SESSION_LOG.md) for development
+Released under the [MIT licence](LICENSE). See [`SESSION_LOG.md`](SESSION_LOG.md) for development
 history and [`ROADMAP.md`](ROADMAP.md) for shipped + parked features.
