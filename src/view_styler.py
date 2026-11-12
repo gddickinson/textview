@@ -241,4 +241,8 @@ def apply_line_height(text_widget, ratio):
         desired,
         QTextBlockFormat.LineHeightTypes.ProportionalHeight.value,
     )
+    # Layout, not content: keep the modified flag so a freshly opened file
+    # does not read as "unsaved changes".
+    was_modified = doc.isModified()
     cursor.mergeBlockFormat(block_fmt)
+    doc.setModified(was_modified)
