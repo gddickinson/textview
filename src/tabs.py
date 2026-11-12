@@ -17,7 +17,7 @@ app brings back your tabs.
 import json
 from pathlib import Path
 
-from PyQt6.QtCore import QObject, pyqtSignal, Qt
+from PyQt6.QtCore import QObject, QPoint, pyqtSignal, Qt
 from PyQt6.QtWidgets import QTabBar
 
 
@@ -33,6 +33,9 @@ class TabBar(QObject):
 
     requested_open = pyqtSignal(str)   # path to (re)open
     requested_clear = pyqtSignal()     # user closed the active tab
+    # Right-click on a tab: (tab index, global position). The host window
+    # pops the menu (see `tab_actions.show_tab_context_menu`).
+    tab_context_requested = pyqtSignal(int, QPoint)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -46,6 +49,8 @@ class TabBar(QObject):
         self.bar.tabCloseRequested.connect(self._on_close)
         self.bar.currentChanged.connect(self._on_current_changed)
         self._suppress_signal = False
+        self.bar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.bar.customContextMenuRequested.connect(self._on_context_menu)
 
     def widget(self) -> QTabBar:
         return self.bar
@@ -88,7 +93,24 @@ class TabBar(QObject):
         return [self.bar.tabData(i) for i in range(self.bar.count())
                 if self.bar.tabData(i)]
 
+    def index_of(self, path: str | None) -> int:
+        """Tab index holding `path`, or -1."""
+        for i in range(self.bar.count()):
+            if self.bar.tabData(i) == path:
+                return i
+        return -1
+
+    def close_tab(self, idx: int):
+        """Close tab `idx` exactly as its close button would."""
+        if 0 <= idx < self.bar.count():
+            self._on_close(idx)
+
     # -- internal -----------------------------------------------------------
+
+    def _on_context_menu(self, pos):
+        idx = self.bar.tabAt(pos)
+        if idx >= 0:
+            self.tab_context_requested.emit(idx, self.bar.mapToGlobal(pos))
 
     def _on_current_changed(self, idx: int):
         if self._suppress_signal or idx < 0:
