@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 
-def test_opening_code_file_is_not_modified(qapp):
+def test_opening_code_file_is_not_modified(qapp, dispose):
     os.chdir(Path(__file__).resolve().parent.parent)
     from PyQt6 import QtWebEngineWidgets  # noqa: F401
     from src.app import MainWindow
@@ -14,7 +14,7 @@ def test_opening_code_file_is_not_modified(qapp):
     assert w._current_format == "python"
     assert not w.viewer.code.document().isModified()
     assert w.edit.modified is False
-    w.close()
+    dispose(w)
 
 
 def test_apply_pygments_keeps_existing_modified_flag(qapp):

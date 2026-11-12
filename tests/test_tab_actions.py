@@ -18,14 +18,14 @@ def _window(qapp):
     return w
 
 
-def test_main_window_constructs_with_tab_context_signal(qapp):
+def test_main_window_constructs_with_tab_context_signal(qapp, dispose):
     w = _window(qapp)
     assert hasattr(w.tab_bar, "tab_context_requested")
     assert w.action_detach_tab.shortcut().toString() == "Ctrl+Shift+T"
-    w.close()
+    dispose(w)
 
 
-def test_detach_moves_tab_to_new_window(qapp):
+def test_detach_moves_tab_to_new_window(qapp, dispose):
     from src import tab_actions
     w = _window(qapp)
     a, b = "sample_files/example.py", "sample_files/example.md"
@@ -38,12 +38,12 @@ def test_detach_moves_tab_to_new_window(qapp):
     # and back again via move_to_window
     assert tab_actions.move_to_window(new, b, w); qapp.processEvents()
     assert b in w.tab_bar.paths() and b not in new.tab_bar.paths()
-    new.close(); w.close()
+    dispose(new, w)
 
 
-def test_detach_on_welcome_is_noop(qapp):
+def test_detach_on_welcome_is_noop(qapp, dispose):
     from src import tab_actions
     w = _window(qapp)
     w._show_welcome()
     assert tab_actions.detach_current_tab(w) is None
-    w.close()
+    dispose(w)

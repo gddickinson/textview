@@ -20,10 +20,15 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 # Configure Qt plugin paths + offscreen platform before any Qt import.
-import PyQt6  # noqa: E402
-_PLUGINS = Path(PyQt6.__file__).parent / "Qt6" / "plugins"
-os.environ.setdefault("QT_QPA_PLATFORM_PLUGIN_PATH", str(_PLUGINS / "platforms"))
-os.environ.setdefault("QT_PLUGIN_PATH", str(_PLUGINS))
+# PyQt6 is optional so the Qt-free web tests (tests/test_web.py) run with only requirements-web.txt.
+try:
+    import PyQt6  # noqa: E402
+except ImportError:
+    PyQt6 = None
+if PyQt6 is not None:
+    _PLUGINS = Path(PyQt6.__file__).parent / "Qt6" / "plugins"
+    os.environ.setdefault("QT_QPA_PLATFORM_PLUGIN_PATH", str(_PLUGINS / "platforms"))
+    os.environ.setdefault("QT_PLUGIN_PATH", str(_PLUGINS))
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
@@ -36,6 +41,23 @@ def qapp():
     QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
     app = QApplication.instance() or QApplication(sys.argv)
     yield app
+
+
+@pytest.fixture
+def dispose(qapp):
+    """dispose(*windows): close and really delete MainWindows. Their QWebEngineView pages must be gone before the
+    WebEngine profile is released at interpreter exit, or the process segfaults after the tests finish."""
+    def _dispose(*wins):
+        from PyQt6.QtCore import QCoreApplication, QEvent
+        from src.app import MainWindow
+        for w in wins:
+            w.close()
+            if w in MainWindow._instances:
+                MainWindow._instances.remove(w)
+            w.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete.value)
+        qapp.processEvents()
+    return _dispose
 
 
 @pytest.fixture
