@@ -106,7 +106,7 @@ def test_low_signal_16bit_tiff_displays_via_autoscale(tmp_path):
     import numpy as np
     arr = np.random.RandomState(0).randint(300, 1200, (32, 32), dtype=np.uint16)
     p = tmp_path / "microscope.tif"
-    Image.fromarray(arr, mode="I;16").save(p)
+    Image.fromarray(arr).save(p)  # uint16 -> I;16 (mode= rejected by Pillow 13)
     img = Image.open(p); img.load()
     out = adjust(img, autoscale=True)
     a = np.asarray(out)
