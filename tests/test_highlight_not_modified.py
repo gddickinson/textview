@@ -21,6 +21,9 @@ def test_apply_pygments_keeps_existing_modified_flag(qapp):
     from PyQt6.QtWidgets import QPlainTextEdit
     from src.renderers import apply_pygments
     ed = QPlainTextEdit(); ed.setPlainText("x = 1\n")
+    ed.document().setModified(False)
+    apply_pygments(ed, "x = 1\n", format_hint="python")
+    assert not ed.document().isModified()
     ed.document().setModified(True)
     apply_pygments(ed, "x = 1\n", format_hint="python")
     assert ed.document().isModified()

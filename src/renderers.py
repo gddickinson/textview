@@ -74,6 +74,9 @@ def apply_pygments(plain_edit, content, path=None, style_name="default", format_
     fmt_cache = _build_format_cache(style)
 
     doc = plain_edit.document()
+    # Re-colouring is not a content edit: keep the document's modified
+    # flag as it was, or a freshly opened file reads as "unsaved changes".
+    was_modified = doc.isModified()
     cursor = QTextCursor(doc)
     cursor.beginEditBlock()
     pos = 0
@@ -95,6 +98,7 @@ def apply_pygments(plain_edit, content, path=None, style_name="default", format_
             pos += length
     finally:
         cursor.endEditBlock()
+        doc.setModified(was_modified)
 
 
 def render_markdown_html(content, theme, display=None):
