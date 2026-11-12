@@ -49,3 +49,28 @@ def test_binary_file_not_pattern_scanned(tmp_path):
     p = tmp_path / "blob.bin"
     p.write_bytes(b"\x00\x01" + DROPPER)
     assert not any(f.category == "suspicious_pattern" for f in scan_file(p).findings)
+
+
+def test_magic_wins_over_extension_hint(tmp_path):
+    from src.file_inspector import inspect_file
+    p = tmp_path / "report.dat"
+    p.write_bytes(b"%PDF-1.4\n%\xe2\xe3\n")
+    info = inspect_file(p)
+    assert (info.detected_kind, info.detected_via) == ("pdf", "magic")
+    assert ("extension_mismatch", "warning") in _cats(scan_file(p))
+
+
+@pytest.mark.parametrize("name,data,kind", [
+    ("arr.npz", b"PK\x03\x04" + bytes(30), "npz"),          # zip container refined by extension
+    ("lib.jar", b"PK\x03\x04" + bytes(30), "jar"),
+    ("climate.nc", b"\x89HDF\r\n\x1a\n" + bytes(20), "netcdf"),
+    ("table.feather", b"ARROW1" + bytes(20), "feather"),
+    ("model.pkl", b"\x80\x04\x95" + bytes(20), "pickle"),
+    ("store.db", b"SQLite format 3\x00" + bytes(84), "sqlite"),  # magic is certain; no "sqlite?"
+    ("photo.bin", b"\x89PNG\r\n\x1a\n" + bytes(20), "png"),
+])
+def test_extension_only_refines_generic_containers(tmp_path, name, data, kind):
+    from src.file_inspector import inspect_file
+    p = tmp_path / name
+    p.write_bytes(data)
+    assert inspect_file(p).detected_kind == kind

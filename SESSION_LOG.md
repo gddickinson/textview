@@ -30,15 +30,13 @@ LLM / API feature stay desktop-only; nothing in the web app or its tests calls a
   flag), so the next open / tab switch / close asked "There are unsaved changes" (`tests/test_highlight_not_modified.py`).
 - `tests/test_image_adjust_modes.py` used `Image.fromarray(..., mode="I;16")`, rejected by Pillow 13.
 
-**Needs George's decision** (not changed):
-- `security_scanner.scan_file` mismatch table has key `"macho"` but the inspector reports `macho32` / `macho64` /
-  `macho-fat` / `macho64-le`, so a Mach-O binary renamed `.pdf` is not flagged; fixing it needs an expected-extension
-  list (`.dylib`, `.so`, `.o`, …) and a decision on `macho-fat` vs Java `.class` (both start `CAFEBABE`).
-- The "script / text body" scan branch tests `detected_kind in {"plain", ""}`, kinds the inspector never returns, so
-  text files without a script extension (e.g. extension-less shebang scripts, `.txt`) are not pattern-scanned.
-- `file_inspector._detect_kind` lets any extension hint override magic bytes (a PDF named `.dat` reports
-  "Generic data file"), though the comment says magic and extension must agree; the `java-class` signature is
-  unreachable behind `macho-fat`.
+**Scanner / inspector fixes** (George: "fix any other problems"; own commits + `tests/test_scanner_regressions.py`):
+- The extension-mismatch table now recognises every Mach-O kind (macho32 / 64 / fat / 64-le); `.dylib`, `.so`,
+  `.bundle`, `.o`, `.out` and `.class` (Java shares the CAFEBABE magic) are expected extensions.
+- The shell-pattern scan runs on every file the inspector sniffs as text (extension-less shebang scripts, `.txt`,
+  `.conf`, …), not only script extensions.
+- Magic bytes win over extension hints (a PDF named `.dat` is a PDF and gets the mismatch warning); a hint only
+  refines a generic container (zip → npz/jar/war/whl/egg, hdf5 → netcdf, arrow → feather, pickle4/5 → pickle).
 
 ## 2026-05-25 — 3D mesh viewer + Blender file inspector
 

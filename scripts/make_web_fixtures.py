@@ -53,6 +53,9 @@ INSPECT_CASES = {
     "store.db": b"SQLite format 3\x00" + bytes(84),
     "arr.npz": _zip({"a.npy": b"\x93NUMPY"}),
     "empty.dat": b"",
+    "report.dat": b"%PDF-1.4\n%\xe2\xe3\n",
+    "photo.bin": b"\x89PNG\r\n\x1a\n" + bytes(20),
+    "climate.nc": b"\x89HDF\r\n\x1a\n" + bytes(20),
     "hex.py": b"x = '" + b"\\x41" * 35 + b"'\nimport os\n",
 }
 

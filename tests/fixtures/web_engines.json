@@ -502,14 +502,14 @@
     "size": 100,
     "size_human": "100 B",
     "extension": ".db",
-    "detected_kind": "sqlite?",
-    "detected_via": "extension+magic",
-    "description": "Database file (likely SQLite or similar)",
+    "detected_kind": "sqlite",
+    "detected_via": "magic",
+    "description": "SQLite database",
     "is_text": false,
     "encoding": "",
     "text_sample": "",
     "hex_preview": "00000000  53 51 4c 69 74 65 20 66 6f 72 6d 61 74 20 33 00  SQLite format 3.\n00000010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................\n00000020  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................\n00000030  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................\n00000040  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................\n00000050  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................\n00000060  00 00 00 00                                      ....",
-    "suggested_action": "Try opening with `sqlite3` — file extension is ambiguous."
+    "suggested_action": "Open with `sqlite3` (Python stdlib) or any SQLite browser."
    },
    "binary": true,
    "findings": []
@@ -550,6 +550,77 @@
     "suggested_action": "Generic binary container — context-dependent. Ask the chat agent for likely interpretations, or open in a hex editor."
    },
    "binary": false,
+   "findings": []
+  },
+  {
+   "name": "report.dat",
+   "hex": "255044462d312e340a25e2e30a",
+   "info": {
+    "size": 13,
+    "size_human": "13 B",
+    "extension": ".dat",
+    "detected_kind": "pdf",
+    "detected_via": "magic",
+    "description": "Portable Document Format",
+    "is_text": false,
+    "encoding": "",
+    "text_sample": "",
+    "hex_preview": "00000000  25 50 44 46 2d 31 2e 34 0a 25 e2 e3 0a           %PDF-1.4.%...",
+    "suggested_action": "Generic binary container — context-dependent. Ask the chat agent for likely interpretations, or open in a hex editor."
+   },
+   "binary": true,
+   "findings": [
+    {
+     "severity": "warning",
+     "category": "extension_mismatch",
+     "description": "file extension `.dat` doesn't match detected kind (pdf)",
+     "detail": "renaming an executable to a doc extension is a phishing trick"
+    }
+   ]
+  },
+  {
+   "name": "photo.bin",
+   "hex": "89504e470d0a1a0a0000000000000000000000000000000000000000",
+   "info": {
+    "size": 28,
+    "size_human": "28 B",
+    "extension": ".bin",
+    "detected_kind": "png",
+    "detected_via": "magic",
+    "description": "PNG image",
+    "is_text": false,
+    "encoding": "",
+    "text_sample": "",
+    "hex_preview": "00000000  89 50 4e 47 0d 0a 1a 0a 00 00 00 00 00 00 00 00  .PNG............\n00000010  00 00 00 00 00 00 00 00 00 00 00 00              ............",
+    "suggested_action": "Generic binary container — context-dependent. Ask the chat agent for likely interpretations, or open in a hex editor."
+   },
+   "binary": true,
+   "findings": [
+    {
+     "severity": "warning",
+     "category": "extension_mismatch",
+     "description": "file extension `.bin` doesn't match detected kind (png)",
+     "detail": "renaming an executable to a doc extension is a phishing trick"
+    }
+   ]
+  },
+  {
+   "name": "climate.nc",
+   "hex": "894844460d0a1a0a0000000000000000000000000000000000000000",
+   "info": {
+    "size": 28,
+    "size_human": "28 B",
+    "extension": ".nc",
+    "detected_kind": "netcdf",
+    "detected_via": "extension+magic",
+    "description": "NetCDF scientific data (HDF5-based)",
+    "is_text": false,
+    "encoding": "",
+    "text_sample": "",
+    "hex_preview": "00000000  89 48 44 46 0d 0a 1a 0a 00 00 00 00 00 00 00 00  .HDF............\n00000010  00 00 00 00 00 00 00 00 00 00 00 00              ............",
+    "suggested_action": "Use `netCDF4` or `xarray.open_dataset`."
+   },
+   "binary": true,
    "findings": []
   },
   {

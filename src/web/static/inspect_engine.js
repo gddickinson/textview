@@ -104,11 +104,14 @@ export function extOf(name) {  // Path(name).suffix.lower()
   return i > 0 && i < base.length - 1 ? base.slice(i).toLowerCase() : '';
 }
 
+// Generic containers an extension hint may refine (file_inspector._REFINES); other hints lose to magic bytes.
+const REFINES = { zip: ['npz', 'jar', 'war', 'whl', 'egg'], hdf5: ['netcdf'], arrow: ['feather'], pickle4: ['pickle'], pickle5: ['pickle'] };
+
 export function detectKind(head, ext) {
   for (const [off, sig, kind, desc] of MAGIC) {
     if (head.length >= off + sig.length && sig.every((v, i) => head[off + i] === v)) {
       const hint = EXT_HINTS[ext];
-      if (hint && hint[0] !== kind) return [hint[0], hint[1], 'extension+magic'];
+      if (hint && (REFINES[kind] || []).includes(hint[0])) return [hint[0], hint[1], 'extension+magic'];
       return [kind, desc, 'magic'];
     }
   }

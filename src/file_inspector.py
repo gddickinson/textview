@@ -270,13 +270,24 @@ def _read_head(p: Path, n: int) -> bytes:
         return b""
 
 
+# Generic containers whose magic an extension hint may refine (magic kind ->
+# hint kinds that are that container). Any other hint loses to the magic bytes.
+_REFINES: dict[str, set[str]] = {
+    "zip":     {"npz", "jar", "war", "whl", "egg"},
+    "hdf5":    {"netcdf"},
+    "arrow":   {"feather"},
+    "pickle4": {"pickle"},
+    "pickle5": {"pickle"},
+}
+
+
 def _detect_kind(head: bytes, ext: str) -> tuple[str, str, str]:
-    # Magic first; cross-reference with extension hint.
+    # Magic first; an extension hint only refines a generic container
+    # (zip + .npz, hdf5 + .nc, ...). A PDF named `.dat` stays a PDF.
     for offset, sig, kind, desc in _MAGIC:
         if len(head) >= offset + len(sig) and head[offset:offset + len(sig)] == sig:
             hint = _EXT_HINTS.get(ext)
-            if hint and hint[0] != kind:
-                # Magic + extension agree on a more specific kind (e.g. zip + .xlsx).
+            if hint and hint[0] in _REFINES.get(kind, ()):
                 return hint[0], hint[1], "extension+magic"
             return kind, desc, "magic"
     if ext in _EXT_HINTS:
