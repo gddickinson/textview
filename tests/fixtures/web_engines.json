@@ -146,6 +146,58 @@
     "suggested_action": "Use `otool -h` (macOS) or `objdump`."
    },
    "binary": true,
+   "findings": [
+    {
+     "severity": "dangerous",
+     "category": "extension_mismatch",
+     "description": "file extension `.pdf` doesn't match detected kind (macho64-le)",
+     "detail": "renaming an executable to a doc extension is a phishing trick"
+    }
+   ]
+  },
+  {
+   "name": "universal.doc",
+   "hex": "cafebabe00000002000000000000000000000000000000000000000000000000",
+   "info": {
+    "size": 32,
+    "size_human": "32 B",
+    "extension": ".doc",
+    "detected_kind": "macho-fat",
+    "detected_via": "magic",
+    "description": "Mach-O universal binary",
+    "is_text": false,
+    "encoding": "",
+    "text_sample": "",
+    "hex_preview": "00000000  ca fe ba be 00 00 00 02 00 00 00 00 00 00 00 00  ................\n00000010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................",
+    "suggested_action": "Use `lipo -info` to list architectures."
+   },
+   "binary": true,
+   "findings": [
+    {
+     "severity": "dangerous",
+     "category": "extension_mismatch",
+     "description": "file extension `.doc` doesn't match detected kind (macho-fat)",
+     "detail": "renaming an executable to a doc extension is a phishing trick"
+    }
+   ]
+  },
+  {
+   "name": "libx.dylib",
+   "hex": "cffaedfe07000001000000000000000000000000000000000000000000000000",
+   "info": {
+    "size": 32,
+    "size_human": "32 B",
+    "extension": ".dylib",
+    "detected_kind": "macho64-le",
+    "detected_via": "magic",
+    "description": "Mach-O 64-bit (little endian)",
+    "is_text": false,
+    "encoding": "",
+    "text_sample": "",
+    "hex_preview": "00000000  cf fa ed fe 07 00 00 01 00 00 00 00 00 00 00 00  ................\n00000010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................",
+    "suggested_action": "Use `otool -h` (macOS) or `objdump`."
+   },
+   "binary": true,
    "findings": []
   },
   {

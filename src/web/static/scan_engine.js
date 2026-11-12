@@ -34,7 +34,7 @@ const ZIP_OK = ['.zip', '.docx', '.docm', '.dotx', '.dotm', '.xlsx', '.xlsm', '.
   '.potm', '.ppsx', '.ppsm', '.odt', '.ods', '.odp', '.odg', '.odf', '.epub', '.jar', '.war', '.ear', '.apk', '.aab',
   '.ipa', '.xpi', '.crx', '.whl'];
 const EXPECTED = { pdf: ['.pdf'], png: ['.png'], jpeg: ['.jpg', '.jpeg'], gif: ['.gif'], elf: ['.elf', '.so', '.out'],
-  zip: ZIP_OK, macho: [''], pe: ['.exe', '.dll', '.sys', '.scr'], parquet: ['.parquet', '.pq'],
+  zip: ZIP_OK, macho: ['.dylib', '.so', '.bundle', '.o', '.out', '.class'], pe: ['.exe', '.dll', '.sys', '.scr'], parquet: ['.parquet', '.pq'],
   sqlite: ['.sqlite', '.sqlite3', '.db', '.db3'], hdf5: ['.h5', '.hdf5', '.he5', '.nc', '.nc4'] };
 const SCRIPT_EXTS = new Set(['.sh', '.bash', '.zsh', '.fish', '.ps1', '.psm1', '.bat', '.cmd', '.py', '.js', '.rb', '.pl', '.php']);
 
@@ -62,9 +62,10 @@ export function scanBytes(name, bytes, fullBytes = 4_000_000) {
   if (DANGEROUS_EXTENSIONS.has(ext))
     add('dangerous', 'executable_extension', `\`${ext}\` is an executable / installer / script-launcher format`,
       'opening can execute code if the user double-clicks elsewhere');
-  const exp = EXPECTED[info.detected_kind] || [];
+  const kind = info.detected_kind.startsWith('macho') ? 'macho' : info.detected_kind;  // macho32 / 64 / fat / 64-le
+  const exp = EXPECTED[kind] || [];
   if (exp.length && ext && !exp.includes(ext) && info.detected_via === 'magic') {
-    const sev = ['pe', 'macho', 'elf'].includes(info.detected_kind) ? 'dangerous' : 'warning';
+    const sev = ['pe', 'macho', 'elf'].includes(kind) ? 'dangerous' : 'warning';
     add(sev, 'extension_mismatch', `file extension \`${ext}\` doesn't match detected kind (${info.detected_kind})`,
       'renaming an executable to a doc extension is a phishing trick');
   }

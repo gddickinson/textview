@@ -288,17 +288,23 @@ def scan_file(path, *, run_clamav: bool = False, head_bytes: int = 65536,
                 ".epub", ".jar", ".war", ".ear", ".apk", ".aab",
                 ".ipa", ".xpi", ".crx", ".whl",
             ),
-            "macho": ("",),  # mach-o has no fixed ext
+            # Mach-O executables usually have no extension (skipped
+            # below); libraries / objects / bundles have these. `.class`
+            # because Java class files share the CAFEBABE magic with
+            # universal (fat) Mach-O binaries.
+            "macho": (".dylib", ".so", ".bundle", ".o", ".out", ".class"),
             "pe": (".exe", ".dll", ".sys", ".scr"),
             "parquet": (".parquet", ".pq"),
             "sqlite": (".sqlite", ".sqlite3", ".db", ".db3"),
             "hdf5": (".h5", ".hdf5", ".he5", ".nc", ".nc4"),
         }
-        expected_exts = expected.get(info.detected_kind, ())
+        # The inspector reports macho32 / macho64 / macho-fat / macho64-le.
+        kind = "macho" if info.detected_kind.startswith("macho") else info.detected_kind
+        expected_exts = expected.get(kind, ())
         # Note: only fire mismatch for binary kinds + non-empty expected list.
         if expected_exts and ext and ext not in expected_exts and \
                 info.detected_via == "magic":
-            sev = "dangerous" if info.detected_kind in {"pe", "macho", "elf"} else "warning"
+            sev = "dangerous" if kind in {"pe", "macho", "elf"} else "warning"
             result.findings.append(Finding(
                 sev, "extension_mismatch",
                 f"file extension `{ext}` doesn't match detected kind "

