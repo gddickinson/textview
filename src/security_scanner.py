@@ -353,8 +353,10 @@ def scan_file(path, *, run_clamav: bool = False, head_bytes: int = 65536,
     # 7. Script / text body pattern scan.
     if ext in {".sh", ".bash", ".zsh", ".fish", ".ps1", ".psm1",
                ".bat", ".cmd", ".py", ".js", ".rb", ".pl", ".php"} or \
-            (info is not None and not info.is_text is False and
-             info.detected_kind in {"plain", ""}):
+            (info is not None and info.is_text):
+        # Any text the inspector recognises — it reports "unknown" for plain
+        # text, "script" for shebang files, "xml" / "html" etc. by magic —
+        # so extension-less scripts and .txt / .conf files are covered too.
         body = _read_all_bounded(p, full_bytes)
         for pat, label, detail in SUSPICIOUS_SCRIPT_PATTERNS:
             m = pat.search(body)

@@ -83,7 +83,7 @@ export function scanBytes(name, bytes, fullBytes = 4_000_000) {
       "rendered in TextView's WebView; review before opening URLs");
     if (/\bjavascript:/i.test(full())) add('warning', 'javascript_uri', `${ext} contains \`javascript:\` URIs`);
   }
-  if (SCRIPT_EXTS.has(ext) || (info.is_text && ['plain', ''].includes(info.detected_kind))) {
+  if (SCRIPT_EXTS.has(ext) || info.is_text) {  // any text file (plain, shebang, xml, ...)
     for (const [re, label, detail] of SCRIPT_PATTERNS) {
       const m = re.exec(full());
       if (m) {

