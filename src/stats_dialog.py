@@ -18,60 +18,10 @@ from PyQt6.QtWidgets import (
     QPushButton, QLabel, QApplication,
 )
 
-from .table_model import to_number
-
-
-_NUMERIC_COLS = [
-    "count", "missing", "mean", "median", "stddev",
-    "min", "Q1", "Q3", "max", "range", "skew", "kurt",
-]
-_STRING_COLS = ["count", "missing", "unique", "top", "top_freq"]
-
-
-def _numeric_stats(values: list[float]) -> dict:
-    n = len(values)
-    if n == 0:
-        return {k: "" for k in _NUMERIC_COLS}
-    m = mean(values)
-    sd = pstdev(values) if n > 1 else 0.0
-    if n >= 4:
-        q = quantiles(values, n=4)  # [Q1, Q2, Q3]
-        q1, q3 = q[0], q[2]
-    else:
-        q1 = q3 = ""
-    # Population skew + kurtosis (Fisher's). Fall back to "" when sd is 0.
-    if sd > 0 and n > 2:
-        skew = sum((v - m) ** 3 for v in values) / (n * sd ** 3)
-        kurt = sum((v - m) ** 4 for v in values) / (n * sd ** 4) - 3.0
-    else:
-        skew = kurt = ""
-
-    def fmt(x):
-        if x == "" or x is None:
-            return ""
-        if isinstance(x, float) and (math.isnan(x) or math.isinf(x)):
-            return ""
-        return f"{x:.4g}"
-
-    return {
-        "count": str(n), "mean": fmt(m), "median": fmt(median(values)),
-        "stddev": fmt(sd), "min": fmt(min(values)), "max": fmt(max(values)),
-        "Q1": fmt(q1), "Q3": fmt(q3),
-        "range": fmt(max(values) - min(values)),
-        "skew": fmt(skew), "kurt": fmt(kurt),
-    }
-
-
-def _string_stats(values: list[str]) -> dict:
-    counts = Counter(v for v in values if v != "")
-    n = len(values)
-    if not counts:
-        return {"count": str(n), "unique": "0", "top": "", "top_freq": ""}
-    top, top_freq = counts.most_common(1)[0]
-    return {
-        "count": str(n), "unique": str(len(counts)),
-        "top": str(top)[:40], "top_freq": str(top_freq),
-    }
+from .table_data import (  # noqa: F401
+    to_number, _NUMERIC_COLS, _STRING_COLS,
+    numeric_stats as _numeric_stats, string_stats as _string_stats,
+)
 
 
 def column_stats(model, col_idx: int) -> dict:

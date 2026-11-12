@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TextView</title>
+<meta name="description" content="TextView: a PyQt6 file viewer for hundreds of file types with live themes, plus an AI agent that knows your workspace. Try the viewer on sample files, the unknown-file inspector, the format database and the workspace search.">
+<link rel="icon" href="static/icon.svg">
+<link rel="stylesheet" href="static/style.css">
+<link rel="stylesheet" href="static/style_app.css">
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+<header class="top">
+  <a class="brand" href="#/"><span class="mark"></span>TextView</a>
+  <nav class="groups">
+    <a href="#/view" data-nav="view">Viewer</a>
+    <a href="#/inspect" data-nav="inspect">Inspector</a>
+    <a href="#/formats" data-nav="formats">Formats</a>
+    <a href="#/search" data-nav="search">Workspace search</a>
+    <a href="#/docs" data-nav="docs">Docs</a>
+    <a href="#/about" data-nav="about">About</a>
+  </nav>
+  <div class="right"><a class="small mute" href="https://github.com/gddickinson/textview" target="_blank" rel="noopener">GitHub</a></div>
+</header>
+<main id="app" tabindex="-1"></main>
+<footer class="foot">TextView · <a href="https://github.com/gddickinson/textview">source on GitHub</a> · <span id="mode"></span></footer>
+<script type="module" src="static/main.js"></script>
+</body>
+</html>

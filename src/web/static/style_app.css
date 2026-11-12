@@ -1,0 +1,51 @@
+/* TextView accent palette + page styles (shared kit theme in style.css). */
+:root { --accent:#38e1ff; --accent2:#ffb347; --accent3:#b48cff; --glow:rgba(56,225,255,.13); }
+button, .btn { color:#021018; }
+.seg button.on { color:#021018; }
+.why { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+.why .card p { margin:6px 0 0; font-size:14px; color:#c6d4ee; }
+.shots { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+.shots figure { margin:0; } .shots img { width:100%; border:1px solid var(--line); border-radius:6px; display:block; }
+.shots figcaption { font-size:12px; color:var(--mute); margin-top:4px; }
+/* viewer */
+.viewer { display:grid; grid-template-columns:280px minmax(0,1fr); gap:18px; align-items:start; }
+.filelist { max-height:420px; overflow:auto; border:1px solid var(--line); border-radius:6px; background:rgba(3,5,10,.6); }
+.filelist h3 { margin:10px 10px 4px; font-size:11px; }
+.filelist a { display:flex; justify-content:space-between; gap:8px; padding:4px 10px; font:13px var(--mono); color:var(--ink); }
+.filelist a small { color:var(--mute); white-space:nowrap; }
+.filelist a.on, .filelist a:hover { background:color-mix(in srgb, var(--accent) 12%, transparent); color:var(--accent); text-decoration:none; }
+.ctlbox .row > * { min-width:110px; } .ctlbox label.chk { display:flex; gap:6px; align-items:center; color:var(--ink); }
+.vhead { display:flex; flex-wrap:wrap; gap:8px; align-items:baseline; margin-bottom:8px; }
+.vhead h2 { margin:0; font:600 20px var(--mono); color:var(--ink); overflow-wrap:anywhere; }
+.code { border-radius:6px; overflow:auto; max-height:70vh; border:1px solid var(--line); }
+.code table { border-collapse:collapse; width:100%; font-size:inherit; }
+.code td { border:0; padding:0 10px; vertical-align:top; }
+.code td.ln { text-align:right; user-select:none; padding:0 8px 0 12px; position:sticky; left:0; }
+.code td.src { white-space:pre; width:100%; }
+.code.wrap td.src { white-space:pre-wrap; overflow-wrap:anywhere; }
+.code tr.cur td.src { background:var(--curline); }
+.rframe { width:100%; border:1px solid var(--line); border-radius:6px; min-height:300px; background:#fff; }
+.ttable { max-height:60vh; overflow:auto; border:1px solid var(--line); border-radius:6px; }
+.ttable table { font:13px var(--mono); } .ttable th { position:sticky; top:0; cursor:pointer; user-select:none; }
+.ttable td.num, .ttable th.num { text-align:right; }
+.nbcell { border-left:3px solid var(--line); padding:6px 12px; margin:10px 0; }
+.nbcell.code { border-left-color:var(--accent3); } .nbcell .count { font:12px var(--mono); color:var(--mute); }
+.nbout { font:13px var(--mono); white-space:pre-wrap; margin:6px 0 0; padding:8px; border-radius:4px; }
+.imgwrap { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:14px; align-items:start; }
+.imgwrap canvas.pic { max-width:100%; height:auto; border:1px solid var(--line); border-radius:6px; background:#222; }
+canvas.hist { width:100%; height:110px; background:#03050a; border:1px solid var(--line); border-radius:4px; }
+.pdfobj { width:100%; height:70vh; border:1px solid var(--line); border-radius:6px; }
+/* inspector / search / docs */
+.drop { border:2px dashed var(--line); border-radius:8px; padding:22px; text-align:center; }
+.drop.over { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 6%, transparent); }
+.sev-dangerous { color:var(--bad); } .sev-warning { color:var(--warn); } .sev-info { color:var(--accent3); }
+.risk { font:600 18px var(--mono); }
+.hit { padding:10px 14px; } .hit .snip { font:12px/1.5 var(--mono); white-space:pre-wrap; color:#c6d4ee; margin:6px 0 0; max-height:7.5em; overflow:hidden; }
+.hit mark { background:color-mix(in srgb, var(--accent2) 35%, transparent); color:var(--ink); }
+.doc { line-height:1.65; } .doc h1 { font-size:30px; } .doc img { max-width:100%; border:1px solid var(--line); border-radius:6px; }
+.doc table { margin:12px 0; } .doc pre { white-space:pre; } .doc code { color:#ffd9a0; } .doc pre code { color:var(--ink); }
+.docnav a { display:block; padding:3px 0; font-size:14px; } .docnav a.on { color:var(--accent); font-weight:600; }
+.fmtrow td:first-child { font:13px var(--mono); color:var(--accent); white-space:nowrap; }
+.exts { font:12px var(--mono); color:#c6d4ee; }
+@media (max-width:760px) { .viewer, .imgwrap { grid-template-columns:1fr; } .filelist { max-height:220px; } }
+.side > *, .viewer > * { min-width:0; } .doc pre { overflow-x:auto; max-width:100%; }

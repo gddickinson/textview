@@ -20,3 +20,6 @@ htmlcov/
 
 # Personal sample files (do not commit)
 sample_files/george_dickinson_CV_Anthropic.tex
+
+# Static web build (scripts/build_static.py)
+site/

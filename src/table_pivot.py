@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections import defaultdict
 from statistics import median as _median
 
-from .table_model import to_number
+from .table_data import to_number
 
 
 def _safe_min(vs): return min(vs) if vs else 0

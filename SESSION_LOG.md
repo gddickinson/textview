@@ -1,5 +1,45 @@
 # SESSION_LOG.md
 
+## 2026-11-12 — Web interface + static GitHub Pages site; three bug fixes
+
+**Web interface** (`src/web/`, `run_web.py` on 127.0.0.1:8110, static export via `scripts/build_static.py`,
+published by `.github/workflows/pages.yml`). Pages: Home (README "Why TextView", real counts, repo screenshots),
+Viewer (14 sample / Save-As files + all 23 templates; ten themes, font size, line height, line numbers, wrap,
+syntax highlighting, current line, Ctrl+T rendered/source; code, rendered markdown/DOCX/archive, CSV/XLSX table with
+filter / sort / Column statistics, PDF, notebook, image adjustments + histogram + eyedropper, audio/video; "open
+your own file"), Inspector (unknown-file report + security scan), Formats (extension map + bundled format DB
+search), Workspace search (BM25 over docs/ + sample_files/), Docs (docs/*.md), About. The chat agent and every
+LLM / API feature stay desktop-only; nothing in the web app or its tests calls an external service.
+
+- Qt-free refactors so the web reuses the real code: `html_render.py` (lexer choice, themed markdown / DOCX HTML;
+  `renderers.py` re-exports), `table_data.py` (CSV parsing, numeric detection, column stats; `table_model`,
+  `stats_dialog`, `table_pivot` import it), `image_adjust` imports QImage lazily. `tests/conftest.py` no longer
+  requires PyQt6 at import (so `tests/test_web.py` runs with `requirements-web.txt` only).
+- JS ports tested against Python (`tests/fixtures/web_engines.json` from `scripts/make_web_fixtures.py`):
+  file_inspector + security_scanner heuristics (20 files identical), BM25 (scores within 1e-9, same order),
+  table stats incl. Python `.4g` formatting, detect_format + FormatDB.search, image_adjust (Pillow, within 1 level).
+- Demo files `src/web/samples/` (YAML / TOML / XLSX / ZIP) are made by the Save As converters
+  (`scripts/make_web_samples.py`).
+- The format DB page uses the bundled JSON only; a user's `~/.config/TextView/file_formats.json` is never exported.
+
+**Bug fixes** (own commits, regression tests first):
+- `src/tab_actions.py` and `TabBar.tab_context_requested` were referenced by `app.py` / `actions.py` but never
+  committed: `MainWindow()` raised ImportError on a fresh clone. Added per the INTERFACE.md / log spec
+  (`tests/test_tab_actions.py`).
+- Opening any code file marked it modified (`apply_line_height` and `apply_pygments` flip QTextDocument's modified
+  flag), so the next open / tab switch / close asked "There are unsaved changes" (`tests/test_highlight_not_modified.py`).
+- `tests/test_image_adjust_modes.py` used `Image.fromarray(..., mode="I;16")`, rejected by Pillow 13.
+
+**Needs George's decision** (not changed):
+- `security_scanner.scan_file` mismatch table has key `"macho"` but the inspector reports `macho32` / `macho64` /
+  `macho-fat` / `macho64-le`, so a Mach-O binary renamed `.pdf` is not flagged; fixing it needs an expected-extension
+  list (`.dylib`, `.so`, `.o`, …) and a decision on `macho-fat` vs Java `.class` (both start `CAFEBABE`).
+- The "script / text body" scan branch tests `detected_kind in {"plain", ""}`, kinds the inspector never returns, so
+  text files without a script extension (e.g. extension-less shebang scripts, `.txt`) are not pattern-scanned.
+- `file_inspector._detect_kind` lets any extension hint override magic bytes (a PDF named `.dat` reports
+  "Generic data file"), though the comment says magic and extension must agree; the `java-class` signature is
+  unreachable behind `macho-fat`.
+
 ## 2026-05-25 — 3D mesh viewer + Blender file inspector
 
 After v3.5 (PDF) wrapped, picked up the deferred "3D files / Blender"

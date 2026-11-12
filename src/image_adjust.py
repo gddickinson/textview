@@ -9,7 +9,6 @@ All multipliers default to 1.0 (identity). Gamma uses the standard
 power-law `out = (in/255) ** (1/gamma) * 255`.
 """
 from PIL import Image, ImageEnhance
-from PyQt6.QtGui import QImage
 
 
 # PIL's ImageEnhance / blend / point operations only work on a small set
@@ -148,8 +147,10 @@ def _apply_gamma(img: Image.Image, gamma: float) -> Image.Image:
     return img.convert("RGB").point(table * 3)
 
 
-def pil_to_qimage(img: Image.Image) -> QImage:
+def pil_to_qimage(img: Image.Image) -> "QImage":
     """Convert a PIL image to a QImage with no shared buffers (`.copy()`)."""
+    # Qt imported here so `adjust()` stays usable without PyQt6 (web interface).
+    from PyQt6.QtGui import QImage
     # 16-bit / 32-bit-float modes can't be byte-copied straight to QImage —
     # autoscale to 8-bit `L` first (preserves dynamic range for scientific
     # imaging — see `_autoscale_to_8bit`).

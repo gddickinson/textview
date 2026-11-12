@@ -1,0 +1,47 @@
+name = "TextView"
+version = "0.1.0"
+supported_inputs = [
+    "txt",
+    "md",
+    "html",
+    "json",
+    "yaml",
+    "csv",
+    "py",
+    "js",
+    "ts",
+    "go",
+    "rs",
+    "rb",
+    "pdf",
+    "docx",
+    "rtf",
+    "epub",
+    "odt",
+]
+themes = [
+    "Light",
+    "Dark",
+    "Solarized Dark",
+    "Solarized Light",
+    "Monokai",
+    "Dracula",
+    "Nord",
+    "Sepia",
+    "High Contrast",
+    "GitHub",
+]
+exports = [
+    "html",
+    "pdf",
+    "md",
+    "txt",
+    "rtf",
+    "png",
+]
+
+[features]
+drag_and_drop = true
+live_config = true
+syntax_highlighting = true
+markdown_rendering = true

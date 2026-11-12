@@ -123,6 +123,32 @@ You can also drag-and-drop files onto the window to open them.
 | ![CSV in table mode](docs/screenshots/04_table.png) **Table mode** for CSV / TSV. Sortable columns, filter bar, edit-mode, live selection stats (count / sum / avg / min / max / median / stddev), one-click chart picker, derived columns via Python expressions. | ![Jupyter notebook](docs/screenshots/05_notebook.png) **Jupyter notebooks** — full viewer / editor / runner. Edit cells, hit Run, the kernel auto-starts; outputs (text / HTML / SVG / PNG / markdown) render in place and persist on save. |
 | ![image viewer with adjustment dock](docs/screenshots/07_image.png) **Image viewer** with brightness / contrast / saturation / gamma sliders, eyedropper (click to copy hex), rubber-band crop, RGB histogram, and multi-frame navigation for GIF / WebP / TIFF. | ![markdown rendered in light theme](docs/screenshots/08_light_theme.png) **Live theming + rich rendering.** Switch themes without restart. Markdown renders to HTML with syntax-highlighted code fences and tables. |
 
+## Web interface
+
+TextView also has a small web interface (`src/web/`) and a static site on GitHub Pages
+(https://gddickinson.github.io/textview/). It runs TextView's own code: the **viewer** on the sample files, the
+Save-As outputs and every starter template (format detection, Pygments highlighting with the ten themes, themed
+markdown / DOCX rendering, CSV / XLSX tables with filters and column statistics, PDF, notebook, image adjustments,
+archive listing), the **unknown-file inspector + security scan**, the **format map and file-format database**, the
+**BM25 workspace search** behind the agent's citations, and the **docs**. The chat agent and other LLM features stay
+in the desktop app; the web pages never call an external service.
+
+```bash
+pip install -r requirements-web.txt
+python run_web.py                       # http://127.0.0.1:8110 — opens your own files with the Python loaders
+python scripts/build_static.py          # static export to site/ (what GitHub Pages serves)
+python -m pytest -q tests/test_web.py   # API + static build + JS-vs-Python engine tests
+```
+
+On the static site your own files are read in the browser by JS ports of `file_inspector`, `security_scanner`,
+`workspace_index` (BM25), `table_data` and `image_adjust`; `tests/fixtures/web_engines.json` holds the Python results
+they are tested against (`node src/web/static/*.test.mjs`).
+
+| | |
+| --- | --- |
+| ![web viewer: Python file with Pygments colours](docs/img/view_example.py.png) | ![web viewer: CSV table with filter and statistics](docs/img/view_example.csv.png) |
+| ![web viewer: image adjustments and histogram](docs/img/view_example.png.png) | ![workspace search with BM25 citations](docs/img/search.png) |
+
 ## Documentation
 
 | Topic | File |

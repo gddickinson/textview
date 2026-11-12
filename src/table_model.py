@@ -19,6 +19,12 @@ import re
 
 from PyQt6.QtCore import Qt, QAbstractTableModel, QModelIndex
 
+# Qt-free parsing / classification helpers (re-exported for existing callers).
+from .table_data import (  # noqa: F401
+    _NUMERIC_RE, _SAMPLE_BYTES, _NUMERIC_SAMPLE_ROWS,
+    parse_delimited, is_numeric, to_number, detect_numeric_columns,
+)
+
 
 # Whitelisted functions exposed to derived-column formulas. Plain math
 # only; no IO, no introspection. The `__builtins__` slot is set to a
@@ -35,61 +41,6 @@ _FORMULA_GLOBALS = {
         "floor", "ceil", "pi", "e", "tau", "isnan", "isinf",
     )},
 }
-
-
-_NUMERIC_RE = re.compile(r"""^\s*-?(?:\d{1,3}(?:[,_]\d{3})+|\d+)(?:\.\d+)?\s*%?\s*$""")
-_SAMPLE_BYTES = 4096
-_NUMERIC_SAMPLE_ROWS = 64
-
-
-def parse_delimited(text: str, delimiter: str | None = None,
-                    has_header: bool = True):
-    """Split delimited text into (header, rows, delimiter).
-
-    If `delimiter` is None or empty, sniff it. Falls back to comma when the
-    sniffer is unhappy with the sample (e.g. a single-column file).
-    """
-    sample = text[:_SAMPLE_BYTES]
-    if not delimiter:
-        try:
-            delimiter = csv.Sniffer().sniff(sample, delimiters=",\t;|").delimiter
-        except csv.Error:
-            delimiter = ","
-    reader = csv.reader(io.StringIO(text), delimiter=delimiter)
-    rows = [r for r in reader if r]   # drop blank lines
-    if not rows:
-        return [], [], delimiter
-    if has_header:
-        header = rows[0]
-        body = rows[1:]
-    else:
-        n = max(len(r) for r in rows)
-        header = [f"col {i + 1}" for i in range(n)]
-        body = rows
-    width = len(header)
-    body = [
-        r + [""] * (width - len(r)) if len(r) < width else r[:width]
-        for r in body
-    ]
-    return header, body, delimiter
-
-
-def is_numeric(s: str) -> bool:
-    return bool(_NUMERIC_RE.match(s or ""))
-
-
-def to_number(s: str):
-    """Best-effort string→float. Strips commas, underscores, %; returns
-    None on failure."""
-    if s is None:
-        return None
-    t = str(s).strip().rstrip("%").replace(",", "").replace("_", "")
-    if not t:
-        return None
-    try:
-        return float(t)
-    except ValueError:
-        return None
 
 
 class TableModel(QAbstractTableModel):
@@ -109,15 +60,7 @@ class TableModel(QAbstractTableModel):
         self._sort: tuple | None = None    # (col, order) — last sort applied
 
     def _detect_numeric_columns(self):
-        cols = []
-        sample = self._rows[:_NUMERIC_SAMPLE_ROWS]
-        for i in range(len(self._header)):
-            non_empty = [r[i] for r in sample if i < len(r) and r[i].strip()]
-            if not non_empty:
-                cols.append(False)
-                continue
-            cols.append(all(is_numeric(v) for v in non_empty))
-        return cols
+        return detect_numeric_columns(self._header, self._rows)
 
     # -- Qt model API --------------------------------------------------------
 

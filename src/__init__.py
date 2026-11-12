@@ -10,4 +10,7 @@ Public modules:
     config_panel       — ConfigPanel dock widget (live-updating).
     exporter           — HTML/PDF/Markdown/Text/RTF/PNG export + print.
     app                — MainWindow.
+    html_render        — Qt-free lexer choice + themed markdown / DOCX HTML (re-exported by renderers).
+    table_data         — Qt-free CSV parsing, numeric detection, column statistics (used by table_model, stats_dialog).
+    web                — FastAPI web interface + static site (see web/__init__.py).
 """
